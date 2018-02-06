@@ -1,0 +1,17 @@
+﻿<!DOCTYPE RCC>
+
+<RCC version="1.0">
+
+  <qresource>
+
+    <file>Resources/piece_black.png</file>
+
+    <file>Resources/piece_black_king.png</file>
+
+    <file>Resources/piece_red.png</file>
+
+    <file>Resources/piece_red_king.png</file>
+
+  </qresource>
+
+</RCC>
