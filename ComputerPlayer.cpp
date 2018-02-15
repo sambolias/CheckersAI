@@ -10,7 +10,7 @@ Board& ComputerPlayer::TakeTurn(Board& board, vector<shared_ptr<Movement>>& move
 {
 	if (moves.size())
 	{
-		auto move = minimax(board, moves, 6);
+		auto move = minimax(board, moves, 3);
 		move->ToString();
 		board = move->ExecuteMovement(board);
 		return board.UpdateKings();
@@ -25,10 +25,10 @@ Board& ComputerPlayer::TakeTurn(Board& board, vector<shared_ptr<Movement>>& move
 shared_ptr<Movement> ComputerPlayer::minimax(Board board, vector<shared_ptr<Movement>>& moves, int depth)
 {
 	vector<std::tuple<shared_ptr<Movement>, double>> weighted;
-	for (shared_ptr<Movement> move : moves)
+	for (int i = 0; i < moves.size(); i++)
 	{
-		double val = minimax(move->ExecuteMovement(board).UpdateKings(), true, depth);
-		weighted.emplace_back(std::make_tuple(move, val));
+		double val = minimax(moves[i]->ExecuteMovement(board).UpdateKings(), true, depth);
+		weighted.emplace_back(std::make_tuple(moves[i], val));
 	}
 	auto best = weighted[0];
 	for (auto move : weighted)
@@ -51,21 +51,23 @@ double ComputerPlayer::minimax(Board board, bool maximize, int depth)
 
 	if (maximize)
 	{
-		double best = INFINITY;
-		for (shared_ptr<Movement> move : moves)
-		{
-			double val = minimax(move->ExecuteMovement(board).UpdateKings(), !maximize, depth - 1);
-			return std::max(val, best);
-		}
-	}
-	else
-	{
 		double best = -INFINITY;
 		for (shared_ptr<Movement> move : moves)
 		{
 			double val = minimax(move->ExecuteMovement(board).UpdateKings(), !maximize, depth - 1);
-			return std::min(val, best);
+			best = std::max(val, best);
 		}
+		return best;
+	}
+	else
+	{
+		double best = INFINITY;
+		for (shared_ptr<Movement> move : moves)
+		{
+			double val = minimax(move->ExecuteMovement(board).UpdateKings(), !maximize, depth - 1);
+			best = std::min(val, best);
+		}
+		return best;
 	}
 }
 

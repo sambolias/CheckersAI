@@ -99,9 +99,9 @@ void Board::Print()
 int Board::getPieceCount(const char piece)
 {
 	int count = 0;
-	for (char piece : _board)
+	for (char p : _board)
 	{
-		if (piece == piece)
+		if (p == piece)
 		{
 			count++;
 		}
