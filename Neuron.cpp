@@ -2,32 +2,33 @@
 #include "Connector.h"
 using std::shared_ptr;
 using std::make_shared;
+#include <iostream>
 
 Neuron::Neuron()
 {
 	_output = 0;
 }
 
-void Neuron::connectInput(shared_ptr<Connector> input)
+void Neuron::connectInput(shared_ptr<Connector> & input)
 {
 	_connections.push_back(input);
 }
 
 void Neuron::connectInput(float input)
 {
-	_output = sigmoidFunction(input);
+	_output = input;
 }
 
 float Neuron::getOutput()
 {
-	float output = _output;
-	float input;
+	float input = _output;
+
 	for (const auto & connection : _connections)
 	{
-		input = connection->getWeightedInput();
-		output += sigmoidFunction(input);
+		input += connection->getWeightedInput();
+
 	}
-	return output;
+	return sigmoidFunction(input);
 }
 
 // returns a float between -1 and 1

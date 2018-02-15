@@ -12,7 +12,7 @@ private:
 	float sigmoidFunction(float s);
 public:
 	Neuron();
-	void connectInput(std::shared_ptr<Connector> input);
+	void connectInput(std::shared_ptr<Connector> & input);
 	void connectInput(float input);
 	float getOutput();
 };
