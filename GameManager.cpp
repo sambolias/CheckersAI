@@ -1,7 +1,7 @@
 #include "GameManager.h"
 #include "BoardDisplay.h"
 #include "ComputerPlayer.h"
-
+#include <QMessageBox>
 // temporary to show use of gui
 std::vector<std::vector<char>> generateBoard()
 {

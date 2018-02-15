@@ -3,6 +3,7 @@
 #include "BoardDisplay.h"
 using std::vector;
 using std::string;
+using std::to_string;
 using std::cout;
 
 Game::Game(std::shared_ptr<Player>& playerOne, std::shared_ptr<Player>& playerTwo) : RED_TURN(0), BLACK_TURN(1)
@@ -16,6 +17,7 @@ Game::Game(std::shared_ptr<Player>& playerOne, std::shared_ptr<Player>& playerTw
 bool Game::IsOver()
 {
 	return _isOver;
+
 }
 
 void Game::TakeNextTurn()
