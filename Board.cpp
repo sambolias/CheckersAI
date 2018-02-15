@@ -95,3 +95,16 @@ void Board::Print()
         }
     }
 }
+
+int Board::getPieceCount(const char piece)
+{
+	int count = 0;
+	for (char piece : _board)
+	{
+		if (piece == piece)
+		{
+			count++;
+		}
+	}
+	return count;
+}

@@ -21,6 +21,7 @@ public:
     char & operator[](int index);
     void Print();
     std::vector<std::vector<char>> GetBoardAsMatrix();
+	int getPieceCount(const char piece); 
 };
 
 #endif
