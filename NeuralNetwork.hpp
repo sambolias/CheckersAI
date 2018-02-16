@@ -1,31 +1,27 @@
 #pragma once
 #include <vector>
-#include <memory>
-
-#include "Connector.h"
-#include "Neuron.h"
 
 class NeuralNetwork
 {
-  std::vector<std::shared_ptr<Connector>> weights;
-  std::vector<std::shared_ptr<Neuron>> neurons;
-  std::vector<int> layerFormat;
-  float kingValue;
+  // Each layer holds an array of neuron outputs. (eg. _layers[0] = 10 sets the neuron output in the first layer to 10)
+  std::vector<int> _layers;
+  // _neurons[layer].size() == the number of neruons in that layer
+  std::vector<std::vector<double>> _neurons;
+  // _weights[layer].size() == the number of connections between the neurons in layer and layer + 1
+  std::vector<std::vector<double>> _weights;
+  double _pieceCount;
+  double kingValue;
 
-
-  std::vector<std::shared_ptr<Neuron>> createNeurons(int layer, std::vector<std::shared_ptr<Neuron>> & prevLayer);
-  std::vector<std::shared_ptr<Neuron>> createInputNeurons();
+  void resetNeurons();
   void randomizeWeights();
-
+  double sigmoidFunction(double x);
+  double sigmoidFunction(int layer, int index, double x);
+  double getRandomWeight();
+  double getLayerEvaluation(int layer);
 public:
-
+  // for each integer, creates a layer with format[index] neurons
+  NeuralNetwork(const std::vector<int> & layers);
   int getNeuronCount();
   int getWeightCount();
-  //format like (NL0, NL1, NL2,...) # nodes per layer i, ...
-  NeuralNetwork(std::vector<int> format);
-  //load from parsed file
-//  NeuralNetwork(const std::vector<vector<int>> &data);
-
-  float evaluateBoard(int player, const std::vector<char> & board);
-
+  double GetBoardEvaluation(bool isRedPlayer, const std::vector<char> & board);
 };
