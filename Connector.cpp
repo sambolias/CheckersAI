@@ -3,7 +3,7 @@ using std::shared_ptr;
 
 Connector::Connector(shared_ptr<Neuron> & input, shared_ptr<Neuron> & output)
 {
-	_weight = 1.0;
+	_weight = 0.2;
 	_inputNeuron = input;
 	_outputNeuron = output;
 }

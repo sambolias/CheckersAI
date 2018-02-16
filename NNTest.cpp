@@ -8,7 +8,7 @@ using std::cout;
 int main()
 {
 
-  vector<char> board(32,'r'); //full board
+  vector<char> board(32,' '); //empty board
 
   vector<char> b2 =  {
                         'r','r','r','r',
@@ -21,12 +21,23 @@ int main()
                         'b','b','b','b',
                     };
 
+  vector<char> b3 =  {
+                        ' ',' ',' ',' ',
+                        ' ',' ',' ',' ',
+                        ' ',' ',' ',' ',
+                        ' ',' ',' ',' ',
+                        ' ',' ',' ',' ',
+                        ' ',' ',' ',' ',
+                        ' ',' ',' ',' ',
+                        'b','b','b',' ',
+                    };
+
   NeuralNetwork test({32, 40, 10, 1});
   NeuralNetwork test2({32, 120, 60, 20, 10, 1});
 
-  cout<< test.evaluateBoard(0, b2)<<"\n";
-  cout<< test2.evaluateBoard(0, b2)<<"\n";
-
+  cout<< test.evaluateBoard(1, b3)<<"\n";
+  cout<< test.evaluateBoard(0, b3)<<"\n";
+exit(0);
   //timing
   {
     int avgNum = 1000;

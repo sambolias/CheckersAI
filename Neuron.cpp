@@ -6,8 +6,8 @@ using std::make_shared;
 
 Neuron::Neuron()
 {
-	_input = 0;
-	_output = 0;
+	_input = 0.;
+	_output = 0.;
 }
 
 void Neuron::connectInput(shared_ptr<Connector> & input)
@@ -28,10 +28,11 @@ float Neuron::getOutput()
 // returns a float between -1 and 1
 float Neuron::sigmoidFunction(float x)
 {
-	const float s = 4.0;
+	const float s = 0.05;
 	const float e = 2.718281828;
 	// Can graph this function to make sure on [-1,1] : 2 / (1 + e^-sx) - 1
-	return 2.0 / (1 + pow(e, (-s * x))) - 1;
+	return (1.0 / (1. + pow(e, (-s * x))))*2. - 1.;
+	//return 1.0 / (1 + pow(e, (-s * x))) ;
 }
 
 void Neuron::update()

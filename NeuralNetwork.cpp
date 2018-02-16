@@ -35,9 +35,9 @@ vector<shared_ptr<Neuron>> NeuralNetwork::createInputNeurons()
 
 void NeuralNetwork::randomizeWeights()
 {
-  //[0.0, 1.5]
+  //[-0.2, 0.2]
   for(auto & weight : weights)
-    weight->setWeight((rand() % 3) / 0.5);
+    weight->setWeight((rand() % 1) * 0.4 - 0.2);
 }
 
 //format like (NL0, NL1, NL2,...) # of layers, # nodes per layer i, ...
@@ -45,8 +45,8 @@ NeuralNetwork::NeuralNetwork(std::vector<int> format): layerFormat(format)
 {
   //seed rand
   srand(time(NULL));
-  //random kingValue [1,3]
-  kingValue = rand() % 2 + 1;
+  //random kingValue [1.,3.]
+  kingValue = rand() % 2 + 1.;
 
   //set input layer
   auto input = createInputNeurons();
@@ -86,7 +86,7 @@ NeuralNetwork::NeuralNetwork(std::vector<int> format): layerFormat(format)
 
 float NeuralNetwork::evaluateBoard(int player, const std::vector<char> & board)
 {
-  float pieceCount = 0;
+  float pieceCount = 0.;
   //set input neurons
   for(int i = 0; i < layerFormat[0]; i++)
   {
@@ -116,6 +116,9 @@ float NeuralNetwork::evaluateBoard(int player, const std::vector<char> & board)
           val = 1.f * kingValue;
         else
           val = -1.f * kingValue;
+        break;
+      default:
+        val = 0.f;
         break;
     }
     pieceCount += val;
