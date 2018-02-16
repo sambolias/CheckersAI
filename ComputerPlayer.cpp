@@ -25,26 +25,28 @@ Board& ComputerPlayer::TakeTurn(Board& board, vector<shared_ptr<Movement>>& move
 shared_ptr<Movement> ComputerPlayer::minimax(Board board, vector<shared_ptr<Movement>>& moves, int depth)
 {
 	vector<std::tuple<shared_ptr<Movement>, double>> weighted;
-	for (int i = 0; i < moves.size(); i++)
+	for (auto move : moves)
 	{
-		double val = minimax(moves[i]->ExecuteMovement(board).UpdateKings(), true, depth);
-		weighted.emplace_back(std::make_tuple(moves[i], val));
+		double val = minimax(move->ExecuteMovement(board).UpdateKings(), true, depth);
+		weighted.emplace_back(std::make_tuple(move, val));
 	}
 	auto best = weighted[0];
 	for (auto move : weighted)
 	{
+		//std::cout << "Move from " << std::get<0>(move)->GetStartPosition() << " to " << std::get<0>(move)->GetEndPosition() << " has weight: " << std::get<1>(move) << std::endl;
 		if (std::get<1>(move) > std::get<1>(best))
 		{
 			best = move;
 		}
 	}
+	//std::cout << "Highest weighted move: " << std::get<0>(best)->GetStartPosition() << " to " << std::get<0>(best)->GetEndPosition() << " has weight: " << std::get<1>(best) << std::endl;
 	return std::get<0>(best);
 }
 
 double ComputerPlayer::minimax(Board board, bool maximize, int depth)
 {
 	vector<shared_ptr<Movement>> moves = GenerateMoves(board);
-	if (depth == 0 || GenerateMoves(board).size() == 0)
+	if (depth == 0 || moves.size() == 0)
 	{
 		return getHeuristic(board);
 	}
@@ -73,7 +75,7 @@ double ComputerPlayer::minimax(Board board, bool maximize, int depth)
 
 double ComputerPlayer::getHeuristic(Board& board)
 {
-	const double kingWeight = 2;
+	const double kingWeight = 1.3;
 	double redValue = board.getPieceCount(Board::K_RED) * kingWeight + board.getPieceCount(Board::RED);
 	double blackValue = board.getPieceCount(Board::K_BLACK) * kingWeight + board.getPieceCount(Board::BLACK);
 	return _color == Board::RED ? redValue - blackValue : blackValue - redValue;
