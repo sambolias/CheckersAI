@@ -3,14 +3,30 @@
 using std::vector;
 #include <iostream>
 using std::cout;
-#include <time.h>
+#include <chrono>
+
+
+void timeNN(NeuralNetwork & net, vector<char> & board)
+{
+  int avgNum = 1000;
+  std::chrono::high_resolution_clock clock;
+  std::chrono::nanoseconds ellapsed (0);
+  for(int i = 0; i < avgNum; i++)
+  {
+    auto start = clock.now();
+      net.GetBoardEvaluation(false, board);
+      auto diff = clock.now() - start;
+      auto ns = std::chrono::duration_cast<std::chrono::nanoseconds> (diff);
+      ellapsed += ns;
+  }
+  cout<<"average time over "<<avgNum<<" iterations\n";
+  cout<<"with "<<net.getNeuronCount()<<" neurons over "<<net.getWeightCount()<<" weights: "<<ellapsed.count()/avgNum<<" ns\n";
+}
 
 int main()
 {
 
-  vector<char> board(32,'r'); //full board
-
-  vector<char> b2 =  {
+  vector<char> board =  {
                         'r','r','r','r',
                         'r','r','r','r',
                         'r','r','r','r',
@@ -24,37 +40,12 @@ int main()
   NeuralNetwork test({32, 40, 10, 1});
   NeuralNetwork test2({32, 50, 70, 60, 40, 20, 1});
 
-  cout<< test.GetBoardEvaluation(false, b2)<<"\n";
-  cout<< test2.GetBoardEvaluation(false, b2)<<"\n";
+  cout<< test.GetBoardEvaluation(false, board)<<"\n";
+  cout<< test2.GetBoardEvaluation(false, board)<<"\n";
 
   //timing
-  {
-    int avgNum = 1000;
-    time_t time1, time2;
-    double ellapsed = 0;
-    for(int i = 0; i < avgNum; i++)
-    {
-      time(&time1);
-        test.GetBoardEvaluation(false, b2);
-      time(&time2);
-      ellapsed += difftime(time2, time1);
-    }
-    cout<<"average time over "<<avgNum<<" iterations\n";
-    cout<<"with "<<test.getNeuronCount()<<" neurons over "<<test.getWeightCount()<<" weights: "<<ellapsed/avgNum*1000<<" ms\n";
-  }
-  {
-    int avgNum = 1000;
-    time_t time1, time2;
-    double ellapsed = 0;
-    for(int i = 0; i < avgNum; i++)
-    {
-      time(&time1);
-        test2.GetBoardEvaluation(false, b2);
-      time(&time2);
-      ellapsed += difftime(time2, time1);
-    }
-    cout<<"average time over "<<avgNum<<" iterations\n";
-    cout<<"with "<<test2.getNeuronCount()<<" neurons over "<<test2.getWeightCount()<<" weights: "<<ellapsed/avgNum*1000<<" ms\n";
-  }
+  timeNN(test, board);
+  timeNN(test2, board);
+
   return 0;
 }
