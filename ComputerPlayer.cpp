@@ -17,60 +17,53 @@ Board& ComputerPlayer::TakeTurn(Board& board, vector<shared_ptr<Movement>>& move
 	}
 	else
 	{
-		qDebug() << "There are no moves for " + _color << '\n';
+		qDebug() << "There are no moves for " + _color;
 		return board;
 	}
 }
 
 shared_ptr<Movement> ComputerPlayer::minimax(Board board, vector<shared_ptr<Movement>>& moves, int depth)
 {
-	vector<std::tuple<shared_ptr<Movement>, double>> weighted;
+	shared_ptr<Movement> bestMove = 0;
+	double bestValue = -INFINITY;
 	for (auto move : moves)
 	{
-		double val = minimax(move->ExecuteMovement(board).UpdateKings(), true, depth);
-		weighted.emplace_back(std::make_tuple(move, val));
-	}
-	auto best = weighted[0];
-	for (auto move : weighted)
-	{
-		//std::cout << "Move from " << std::get<0>(move)->GetStartPosition() << " to " << std::get<0>(move)->GetEndPosition() << " has weight: " << std::get<1>(move) << std::endl;
-		if (std::get<1>(move) > std::get<1>(best))
+		Board newBoard = board; // create new board because move->ExecuteMovement(board) modifies board
+		double val = minimax(0, move->ExecuteMovement(newBoard).UpdateKings(), false, depth);
+		if (val > bestValue)
 		{
-			best = move;
+			bestMove = move;
+			bestValue = val;
 		}
+		//qDebug() << "Move " << move->ToString().c_str() << " with weight " << val;
 	}
-	//std::cout << "Highest weighted move: " << std::get<0>(best)->GetStartPosition() << " to " << std::get<0>(best)->GetEndPosition() << " has weight: " << std::get<1>(best) << std::endl;
-	return std::get<0>(best);
+	//qDebug() << "Chose move " << bestMove->ToString().c_str() << " with weight " << bestValue << '\n';
+	return bestMove;
 }
 
-double ComputerPlayer::minimax(Board board, bool maximize, int depth)
+double ComputerPlayer::minimax(double currentValue, Board board, bool maximize, int depth)
 {
-	vector<shared_ptr<Movement>> moves = GenerateMoves(board);
+	currentValue += getHeuristic(board);
+	// Generate moves for either computer or opponent (based on maximize)
+	char color = _color;
+	if (!maximize)
+	{
+		color = (_color == Board::RED) ? Board::BLACK : Board::RED;
+	}
+	vector<shared_ptr<Movement>> moves = GenerateMoves(board, color);
 	if (depth == 0 || moves.size() == 0)
 	{
-		return getHeuristic(board);
+		return currentValue;
 	}
-
-	if (maximize)
+	// Evaluate moves for best move
+	double best = (maximize) ? -INFINITY : INFINITY; // set best to worst possible value
+	for (shared_ptr<Movement> move : moves)
 	{
-		double best = -INFINITY;
-		for (shared_ptr<Movement> move : moves)
-		{
-			double val = minimax(move->ExecuteMovement(board).UpdateKings(), !maximize, depth - 1);
-			best = std::max(val, best);
-		}
-		return best;
+		Board newBoard = board; // create new board because move->ExecuteMovement(board) modifies board
+		double val = minimax(currentValue, move->ExecuteMovement(newBoard).UpdateKings(), !maximize, depth - 1);
+		best = (maximize) ? std::max(val, best) : std::min(val, best);
 	}
-	else
-	{
-		double best = INFINITY;
-		for (shared_ptr<Movement> move : moves)
-		{
-			double val = minimax(move->ExecuteMovement(board).UpdateKings(), !maximize, depth - 1);
-			best = std::min(val, best);
-		}
-		return best;
-	}
+	return best;
 }
 
 double ComputerPlayer::getHeuristic(Board& board)
