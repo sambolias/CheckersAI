@@ -35,14 +35,15 @@ shared_ptr<Movement> ComputerPlayer::minimax(Board board, vector<shared_ptr<Move
 			bestMove = move;
 			bestValue = val;
 		}
-		//qDebug() << "Move " << move->ToString().c_str() << " with weight " << val;
+		qDebug() << "Move " << move->ToString().c_str() << " with weight " << val;
 	}
-	//qDebug() << "Chose move " << bestMove->ToString().c_str() << " with weight " << bestValue << '\n';
+	qDebug() << "Chose move " << bestMove->ToString().c_str() << " with weight " << bestValue << '\n';
 	return bestMove;
 }
 
-double ComputerPlayer::minimax(double currentValue, Board board, bool maximize, int depth)
+double ComputerPlayer::minimax(double currentValue, Board & board, bool maximize, int depth)
 {
+	// Add current board score to total
 	currentValue += getHeuristic(board);
 	// Generate moves for either computer or opponent (based on maximize)
 	char color = _color;
