@@ -17,7 +17,7 @@ class NeuralNetwork
   double sigmoidFunction(double x);
   double sigmoidFunction(int layer, int index, double x);
   double getRandomWeight();
-  double getLayerEvaluation(int layer);
+  double getLayerEvaluation();
 public:
   // for each integer, creates a layer with format[index] neurons
   NeuralNetwork(const std::vector<int> & layers);
