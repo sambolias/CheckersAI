@@ -55,10 +55,10 @@ int NeuralNetwork::getWeightCount()
 
 void NeuralNetwork::randomizeWeights()
 {
-  _weights = vector<vector<double>>(_layers.size());
+  _weights = vector<vector<float>>(_layers.size());
   for (int layer = 0; layer < _layers.size() - 1; layer++)
   {
-    _weights[layer] = vector<double>(_layers[layer] * _layers[layer + 1]);
+    _weights[layer] = vector<float>(_layers[layer] * _layers[layer + 1]);
     for (int weightIndex = 0; weightIndex < _weights[layer].size(); ++weightIndex)
     {
       _weights[layer][weightIndex] = getRandomWeight();
@@ -68,37 +68,37 @@ void NeuralNetwork::randomizeWeights()
 }
 
 // [-0.2, 0.2]
-double NeuralNetwork::getRandomWeight()
+float NeuralNetwork::getRandomWeight()
 {
-	double randomWeight = rand() % 101; // [0, 100]
+	float randomWeight = rand() % 101; // [0, 100]
 	randomWeight /= 100.0; // [0, 1];
 	randomWeight *= 0.4; // [0, 0.4]
 	randomWeight -= 0.2; // [-0.2, 0.2]
-	return randomWeight;	
+	return randomWeight;
 }
 
 void NeuralNetwork::resetNeurons()
 {
-  _neurons = vector<vector<double>>(_layers.size());
+  _neurons = vector<vector<float>>(_layers.size());
   for (int layer = 0; layer < _layers.size(); ++layer)
   {
-    _neurons[layer] = vector<double>(_layers[layer], 0);
+    _neurons[layer] = vector<float>(_layers[layer], 0);
   }
 }
 
 // returns a float between -1 and 1
-double NeuralNetwork::sigmoidFunction(double x)
+float NeuralNetwork::sigmoidFunction(float x)
 {
-	const double s = 4;
-	const double e = 2.718281828;
+	const float s = 4;
+	const float e = 2.718281828;
 	// Can graph this function to make sure on [-1,1] : 2 / (1 + e^-sx) - 1
 	return 2.0 / (1 + pow(e, (-s * x))) - 1;
 }
 
-double NeuralNetwork::GetBoardEvaluation(bool isRedPlayer, const vector<char> & board)
+float NeuralNetwork::GetBoardEvaluation(bool isRedPlayer, const vector<char> & board)
 {
-  resetNeurons();
-  double input;
+  //resetNeurons();
+  float input;
   char boardSquare;
   _pieceCount = 0;
   for (int i = 0; i < board.size(); ++i)
@@ -126,7 +126,7 @@ double NeuralNetwork::GetBoardEvaluation(bool isRedPlayer, const vector<char> & 
       input *= -1;
     }
     _pieceCount += input;
-    _neurons[0][i] = sigmoidFunction(input);
+    _neurons[0][i] = input;//sigmoidFunction(input);
   }
 
   return getLayerEvaluation(1);
@@ -139,7 +139,7 @@ double NeuralNetwork::GetBoardEvaluation(bool isRedPlayer, const vector<char> & 
 // Then so on...
 /*
 Ex: layer 1 has ABC, layer 2 has DEF, and layer 3 has G
-    The order of the weights would be as shown below      
+    The order of the weights would be as shown below
       A --1-- D
       B --2-- D
       C --3-- D
@@ -147,7 +147,7 @@ Ex: layer 1 has ABC, layer 2 has DEF, and layer 3 has G
       A --4-- E
       B --5-- E
       C --6-- E
-  
+
       A --7-- F
       B --8-- F
       C --9-- F
@@ -156,30 +156,31 @@ Ex: layer 1 has ABC, layer 2 has DEF, and layer 3 has G
       E --11-- G
       F --12-- G
 */
-double NeuralNetwork::getLayerEvaluation(int layer)
+float NeuralNetwork::getLayerEvaluation(int layerbroken)
 {
-  if (layer == _layers.size())
-    return _neurons.back().back();
-
-  int previousLayer = layer - 1;
-  int previousLayerSize = _layers[previousLayer];
-  int layerSize = _layers[layer];
-  int weightIndex;
-  double currentNeuron;
-  for (int neuronIndex = 0; neuronIndex < layerSize; ++neuronIndex)
+  for(int layer = layerbroken; layer < _layers.size(); layer++)
   {
-    currentNeuron = _neurons[layer][neuronIndex];
-    for (int previousNeuronIndex = 0; previousNeuronIndex < previousLayerSize; ++previousNeuronIndex)
+    int previousLayer = layer - 1;
+    int previousLayerSize = _layers[previousLayer];
+    int layerSize = _layers[layer];
+    int weightIndex;
+    float currentNeuron;
+    for (int neuronIndex = 0; neuronIndex < layerSize; ++neuronIndex)
     {
-      weightIndex = previousLayerSize * neuronIndex + previousNeuronIndex;
-      currentNeuron += _weights[previousLayer][weightIndex] * _neurons[previousLayer][previousNeuronIndex];
+      currentNeuron = 0.;//_neurons[layer][neuronIndex];
+//      #pragma omp parallel for num_threads(32)
+      for (int previousNeuronIndex = 0; previousNeuronIndex < previousLayerSize; ++previousNeuronIndex)
+      {
+        weightIndex = previousLayerSize * neuronIndex + previousNeuronIndex;
+        currentNeuron += _weights[previousLayer][weightIndex] * _neurons[previousLayer][previousNeuronIndex];
+      }
+      // if output neuron, add piece count
+      if (layer == _layers.size() - 1)
+      {
+        currentNeuron += _weights.back().back() * _pieceCount;
+      }
+      _neurons[layer][neuronIndex] = sigmoidFunction(currentNeuron);
     }
-    // if output neuron, add piece count
-    if (layer == _layers.size() - 1)
-    {
-      currentNeuron += _weights.back().back() * _pieceCount;
-    }
-    _neurons[layer][neuronIndex] = sigmoidFunction(currentNeuron);
   }
-  return getLayerEvaluation(layer+1);
+  return _neurons.back().back();
 }

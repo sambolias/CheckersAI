@@ -38,10 +38,14 @@ int main()
                     };
 
   NeuralNetwork test({32, 40, 10, 1});
-  NeuralNetwork test2({32, 50, 70, 60, 40, 20, 1});
+  NeuralNetwork test2({32, 120, 80, 60, 20, 1});
 
+  cout<<"4 Layer Network output (Red then Black)\n";
   cout<< test.GetBoardEvaluation(false, board)<<"\n";
+  cout<< test.GetBoardEvaluation(true, board)<<"\n";
+  cout<<"6 Layer Network output (Red then Black)\n";
   cout<< test2.GetBoardEvaluation(false, board)<<"\n";
+  cout<< test2.GetBoardEvaluation(true, board)<<"\n";
 
   //timing
   timeNN(test, board);
