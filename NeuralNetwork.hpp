@@ -14,10 +14,17 @@ class NeuralNetwork
 
   void resetNeurons();
   void randomizeWeights();
+<<<<<<< HEAD
   float sigmoidFunction(float x);
   float sigmoidFunction(int layer, int index, float x);
   float getRandomWeight();
   float getLayerEvaluation(int layer);
+=======
+  double sigmoidFunction(double x);
+  double sigmoidFunction(int layer, int index, double x);
+  double getRandomWeight();
+  double getLayerEvaluation();
+>>>>>>> b2d441c27f6c4a078a59a440372fd604e8f7d4bb
 public:
   // for each integer, creates a layer with format[index] neurons
   NeuralNetwork(const std::vector<int> & layers);

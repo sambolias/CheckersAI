@@ -10,6 +10,9 @@ using std::endl;
 #include <ctime>
 using std::srand;
 using std::time;
+#include <random>
+using std::default_random_engine;
+using std::normal_distribution;
 #include <cmath>
 using std::pow;
 #include "Board.hpp"
@@ -25,8 +28,10 @@ NeuralNetwork::NeuralNetwork(const std::vector<int> & layers)
   }
   //seed rand
   srand(time(0));
+  default_random_engine generator;
+  normal_distribution<double> normalDistribution(2.0, 0.5);
   //random kingValue [1,3]
-  kingValue = (rand() % 101) * 2.0 / 100.0 + 1.0;
+  kingValue = (normalDistribution(generator));
 
   _layers = layers;
   resetNeurons();
@@ -97,8 +102,12 @@ float NeuralNetwork::sigmoidFunction(float x)
 
 float NeuralNetwork::GetBoardEvaluation(bool isRedPlayer, const vector<char> & board)
 {
+<<<<<<< HEAD
   //resetNeurons();
   float input;
+=======
+  double input;
+>>>>>>> b2d441c27f6c4a078a59a440372fd604e8f7d4bb
   char boardSquare;
   _pieceCount = 0;
   for (int i = 0; i < board.size(); ++i)
@@ -126,10 +135,14 @@ float NeuralNetwork::GetBoardEvaluation(bool isRedPlayer, const vector<char> & b
       input *= -1;
     }
     _pieceCount += input;
+<<<<<<< HEAD
     _neurons[0][i] = input;//sigmoidFunction(input);
+=======
+    _neurons[0][i] = input;
+>>>>>>> b2d441c27f6c4a078a59a440372fd604e8f7d4bb
   }
 
-  return getLayerEvaluation(1);
+  return getLayerEvaluation();
 }
 
 // This evaluation requires weights to be stored in a specific way
@@ -156,6 +169,7 @@ Ex: layer 1 has ABC, layer 2 has DEF, and layer 3 has G
       E --11-- G
       F --12-- G
 */
+<<<<<<< HEAD
 float NeuralNetwork::getLayerEvaluation(int layerbroken)
 {
   for(int layer = layerbroken; layer < _layers.size(); layer++)
@@ -175,6 +189,31 @@ float NeuralNetwork::getLayerEvaluation(int layerbroken)
         currentNeuron += _weights[previousLayer][weightIndex] * _neurons[previousLayer][previousNeuronIndex];
       }
       // if output neuron, add piece count
+=======
+double NeuralNetwork::getLayerEvaluation()
+{
+  int previousLayer;
+  int previousLayerSize;
+  int layerSize;
+  int weightIndex;
+  double currentNeuron;
+  for (int layer = 1; layer < _layers.size(); ++layer)
+  {
+    previousLayer = layer - 1;
+    previousLayerSize = _layers[previousLayer];
+    layerSize = _layers[layer];
+    // Iterate over neurons in the current layer
+    for (int neuronIndex = 0; neuronIndex < layerSize; ++neuronIndex)
+    {
+      currentNeuron = 0;
+      weightIndex =  previousLayerSize * neuronIndex;
+      // Add the products of the weights and neurons from the previous layer
+      for (int previousNeuronIndex = 0; previousNeuronIndex < previousLayerSize; ++previousNeuronIndex)
+      {
+        currentNeuron += _weights[previousLayer][weightIndex++] * _neurons[previousLayer][previousNeuronIndex];
+      }
+      // If output neuron, add piece count
+>>>>>>> b2d441c27f6c4a078a59a440372fd604e8f7d4bb
       if (layer == _layers.size() - 1)
       {
         currentNeuron += _weights.back().back() * _pieceCount;
@@ -182,5 +221,10 @@ float NeuralNetwork::getLayerEvaluation(int layerbroken)
       _neurons[layer][neuronIndex] = sigmoidFunction(currentNeuron);
     }
   }
+<<<<<<< HEAD
   return _neurons.back().back();
 }
+=======
+  return _neurons.back().back();  
+}
+>>>>>>> b2d441c27f6c4a078a59a440372fd604e8f7d4bb
