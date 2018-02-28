@@ -13,6 +13,7 @@
 #include <cctype>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 class BoardDisplay : public QMainWindow
 {
@@ -28,6 +29,8 @@ public slots:
 	void save();
 	void load();
 	void quit();
+	void normalDistributionTest();
+	void uniformDistribtutionTest();
 
 public:
 	TileDisplay * tiles[8][8];

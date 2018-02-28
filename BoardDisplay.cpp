@@ -1,5 +1,9 @@
 #include "BoardDisplay.h"
-
+#include "DistributionTestDisplay.h"
+#include "NormalDistribution.h"
+#include "UniformDistribution.h"
+#include <QDebug>
+#include <QSharedPointer>
 QTextEdit * BoardDisplay::textDisplay;
 
 BoardDisplay::BoardDisplay()
@@ -25,8 +29,18 @@ BoardDisplay::BoardDisplay()
 	QAction* quitAction = menuGame->addAction("Quit");
 	connect(quitAction, SIGNAL(triggered()), this, SLOT(quit()));
 
+	// Tests
+	QMenu* menuTests = new QMenu("Tests");
+	// Normal Distribution
+	QAction* normalDistributionTestAction = menuTests->addAction("Normal Distribution Test");
+	connect(normalDistributionTestAction, SIGNAL(triggered()), this, SLOT(normalDistributionTest()));
+	// Uniform Distribution
+	QAction* uniformDistributionTestAction = menuTests->addAction("Uniform Distribution Test");
+	connect(uniformDistributionTestAction, SIGNAL(triggered()), this, SLOT(uniformDistribtutionTest()));
+
 	QMenuBar* mainMenu = this->menuBar();
 	mainMenu->addMenu(menuGame);
+	mainMenu->addMenu(menuTests);
 
 	// text display
 	textDisplay = new QTextEdit(this);
@@ -99,4 +113,26 @@ void BoardDisplay::save()
 
 void BoardDisplay::load()
 {
+}
+
+void BoardDisplay::normalDistributionTest()
+{
+	double mean = 0;
+	double deviation = 1;
+	double increment = 0.25;
+	int amount = 1700;
+	QSharedPointer<StatisticalDistribution> distribution = QSharedPointer<NormalDistribution>::create(mean, deviation);
+	DistributionTestDisplay * distributionTestDisplay = new DistributionTestDisplay(this);
+	distributionTestDisplay->start(distribution, amount, increment);
+}
+
+void BoardDisplay::uniformDistribtutionTest()
+{
+	double lowerBound = 0;
+	double upperBound = 10;
+	double increment = 1;
+	int amount = 1700;
+	QSharedPointer<StatisticalDistribution> distribution = QSharedPointer<UniformDistribution>::create(lowerBound, upperBound);
+	DistributionTestDisplay * distributionTestDisplay = new DistributionTestDisplay(this);
+	distributionTestDisplay->start(distribution, amount, increment);
 }
