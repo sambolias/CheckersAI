@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
 #include <random>
+#include <cmath>
 
 class StatisticalDistribution
 {

@@ -22,7 +22,7 @@ using std::time;
 void DistributionTestDisplay::start(QSharedPointer<StatisticalDistribution> statisticalDistribution, int amount, double increment)
 {
 	QSplineSeries * series = new QSplineSeries();
-	series->setName("Normal Distribution (n = ?)");
+	series->setName("Distribution (n = )" + QString::number(amount));
 	auto distribution = statisticalDistribution->GetDistribution(amount, increment);
 	double maxRange = 0;
 	double minDomain = INFINITY;

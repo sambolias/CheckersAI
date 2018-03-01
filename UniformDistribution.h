@@ -9,6 +9,6 @@ private:
 public:
 	UniformDistribution(double lowerBound, double upperBound);
 	~UniformDistribution();
-	virtual double GetDistributionNumber() override;
+	double GetDistributionNumber() override;
 };
 
