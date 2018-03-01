@@ -20,6 +20,8 @@ using std::ifstream;
 #include <exception>
 using std::exception;
 #include "Board.hpp"
+#include "NormalDistribution.h"
+#include "UniformDistribution.h"
 #include "NeuralNetwork.hpp"
 
 
@@ -47,6 +49,8 @@ NeuralNetwork::NeuralNetwork(const std::vector<int> & layers)
   srand(time(0));
   //random kingValue [1,3]
   kingValue = (rand() % 101) * 2.0 / 100.0 + 1.0;
+  //initial sigma always .05
+  sigma = 0.05;
 
   _layers = layers;
   resetNeurons();
@@ -54,13 +58,12 @@ NeuralNetwork::NeuralNetwork(const std::vector<int> & layers)
 
 }
 
-//TODO make augFlag augment weights randomly - need some augmentation factor too that can be saved i think
-NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag)
+//augFlag mutates loaded board
+NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag, int n = 30)
 {
   vector<float> raw = parseFile(fname);
   if(!raw.empty())
   {
-    cout<<raw.size()<<"\n";
     //set other variables
     vector<int> layers(raw[0]);
     int idx = 1;
@@ -70,14 +73,26 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag)
     }
     _layers = layers;
     kingValue = raw[idx];
-    //cout<<"kingValue="<<kingValue<<"\n";
+    sigma = raw[++idx];
     pieceCountWeight = raw[++idx];
-    //cout<<"pieceCountWeight="<<pieceCountWeight<<"\n";
 
     srand(time(0));
     resetNeurons();
 
     //TODO augment weights here if flag is set - using correct distribution (can be added to savefile)
+    if(augFlag)
+    {
+      //mutation constants - n from ctor
+      //int n = 30;
+      float tau = 1. / sqrt(2 * sqrt(n));
+      //mutate values
+      kingValue = kingValue + UniformRandom(-0.1, 0.1);
+      sigma = sigma * exp(tau, NormalRandom(0, 1));
+
+      //mutate weights
+      for(int i = idx; i < raw.size(); i++)
+        raw[i] = raw[i] + sigma * NormalRandom(0, 1);
+    }
     //set weights
     float * f = &raw[idx];
     _weights = vector<vector<__m256*>>(_layers.size());
@@ -100,7 +115,7 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag)
 }
 bool NeuralNetwork::saveNetwork(std::string fname)
 {
-  //write to file #of layers / Layers / kingValue/ pieceCountWeight / weights
+  //write to file #of layers / Layers / kingValue / sigma / pieceCountWeight / weights
   ofstream ofs(fname);
   try
   {
@@ -108,6 +123,7 @@ bool NeuralNetwork::saveNetwork(std::string fname)
     for(auto l : _layers)
       ofs<<l<<" ";
     ofs<<kingValue<<" ";
+    ofs<<sigma<<" ";
     ofs<<pieceCountWeight<<" ";
     for(int layer = 0; layer < _weights.size(); layer++)
       for(int idx = 0; idx < _weights[layer].size(); idx++)

@@ -12,7 +12,7 @@ void timeNN(NeuralNetwork & net, vector<char> & board)
   std::chrono::high_resolution_clock clock;
   std::chrono::nanoseconds ellapsed (0);
   auto start = clock.now();
-  #pragma omp parallel for
+  //#pragma omp parallel for
   for(int i = 0; i < avgNum; i++)
   {
       net.GetBoardEvaluation(false, board);
