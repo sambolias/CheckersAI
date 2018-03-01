@@ -128,10 +128,10 @@ void BoardDisplay::normalDistributionTest()
 
 void BoardDisplay::uniformDistribtutionTest()
 {
-	double lowerBound = 0;
-	double upperBound = 10;
-	double increment = 1;
-	int amount = 1700;
+	double lowerBound = -1.0;
+	double upperBound = 1.0;
+	double increment = 0.1;
+	int amount = 1000;
 	QSharedPointer<StatisticalDistribution> distribution = QSharedPointer<UniformDistribution>::create(lowerBound, upperBound);
 	DistributionTestDisplay * distributionTestDisplay = new DistributionTestDisplay(this);
 	distributionTestDisplay->start(distribution, amount, increment);

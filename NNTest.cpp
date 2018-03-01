@@ -25,7 +25,7 @@ void timeNN(NeuralNetwork & net, vector<char> & board)
   cout<<ellapsed.count()/avgNum<<" ns per evaluation\n";
   cout<<(double)(1.0e9/(ellapsed.count()/avgNum))<<" board evaluations per second\n";
 }
-
+/*
 int main()
 {
 
@@ -63,3 +63,4 @@ int main()
 
   return 0;
 }
+*/

@@ -4,6 +4,8 @@ using std::time;
 #include <random>
 using std::default_random_engine;
 using std::map;
+#include <cmath>
+using std::floor;
 
 StatisticalDistribution::StatisticalDistribution()
 { 
@@ -26,7 +28,7 @@ map<double, int> StatisticalDistribution::GetDistribution(int amount, double inc
 	for (int i = 0; i < amount; ++i)
 	{
 		distributionValue = GetDistributionNumber();
-		preciseValue = round(distributionValue / increment) * increment;
+		preciseValue = floor(distributionValue / increment) * increment;
 		if (distribution.count(preciseValue))
 		{
 			distribution[preciseValue]++;
