@@ -59,7 +59,7 @@ NeuralNetwork::NeuralNetwork(const std::vector<int> & layers)
 }
 
 //augFlag mutates loaded board
-NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag, int n = 30)
+NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag, int n)
 {
   vector<float> raw = parseFile(fname);
   if(!raw.empty())
@@ -82,16 +82,19 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag, int n = 30)
     //TODO augment weights here if flag is set - using correct distribution (can be added to savefile)
     if(augFlag)
     {
+      UniformDistribution U(-0.1, 0.1);
+      NormalDistribution N(0, 1);
       //mutation constants - n from ctor
       //int n = 30;
-      float tau = 1. / sqrt(2 * sqrt(n));
+      float tau = 1. / sqrt(2 * sqrt((float)n));
       //mutate values
-      kingValue = kingValue + UniformRandom(-0.1, 0.1);
-      sigma = sigma * exp(tau, NormalRandom(0, 1));
-
+      kingValue = kingValue + U.GetDistributionNumber();
+      sigma = sigma * pow(tau, N.GetDistributionNumber());  //check if it is exp(tau*rand)
+      pieceCountWeight = sigma * N.GetDistributionNumber();
+      
       //mutate weights
       for(int i = idx; i < raw.size(); i++)
-        raw[i] = raw[i] + sigma * NormalRandom(0, 1);
+        raw[i] = raw[i] + sigma * N.GetDistributionNumber();
     }
     //set weights
     float * f = &raw[idx];

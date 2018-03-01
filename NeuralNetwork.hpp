@@ -35,7 +35,7 @@ class NeuralNetwork
 public:
   // for each integer, creates a layer with format[index] neurons
   NeuralNetwork(const std::vector<int> & layers);
-  NeuralNetwork(std::string fname, bool augFlag, int n);
+  NeuralNetwork(std::string fname, bool augFlag, int n=30);
   bool saveNetwork(std::string fname);
   int getNeuronCount();
   int getWeightCount();
