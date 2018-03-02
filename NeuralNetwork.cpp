@@ -19,6 +19,7 @@ using std::ofstream;
 using std::ifstream;
 #include <exception>
 using std::exception;
+#include <utility>
 #include "Board.hpp"
 #include "NormalDistribution.h"
 #include "UniformDistribution.h"
@@ -35,6 +36,13 @@ using std::exception;
 #include "avx_mathfun.h"
 #endif
 
+// NeuralNetwork::~NeuralNetwork()
+// {
+//   // for(int i = 0; i < _weights.size(); i++)
+//   //   for(int j = 0; j < _weights[i].size(); j++)
+//   //     delete _weights[i][j];
+// }
+
 //format like (N0, N1, N2,..., Ni) where N is the number of neurons in the given layer i
 NeuralNetwork::NeuralNetwork(const std::vector<int> & layers)
 {
@@ -48,13 +56,36 @@ NeuralNetwork::NeuralNetwork(const std::vector<int> & layers)
   //seed rand
   srand(time(0));
   //random kingValue [1,3]
-  kingValue = (rand() % 101) * 2.0 / 100.0 + 1.0;
+  UniformDistribution U(1.0, 3.0);
+
+  kingValue = U.GetDistributionNumber();//(rand() % 101) * 2.0 / 100.0 + 1.0;
   //initial sigma always .05
   sigma = 0.05;
 
   _layers = layers;
   resetNeurons();
   randomizeWeights();
+// cout<<pieceCountWeight<<"\n";
+// float randomWeight[8] = {1,2,3,4,5,6,7,8};
+// auto rw = getRandomWeight();//_mm256_load_ps(&randomWeight[0]);
+// vector<__m256*> rwt; rwt.push_back(&rw);
+//_weights[0][0] = &rw;
+  //debug
+  {
+    float f[8];
+    _mm256_store_ps(&f[0], *(_weights[0][0]));//*rwt[0]);
+    for(int i = 0; i < 8; i++)
+      cout<<f[i]<<" ";
+    cout<<"\n";
+  }
+  {
+    float f[8];
+    _mm256_store_ps(&f[0], *(_weights[0][1]));//*rwt[0]);
+    for(int i = 0; i < 8; i++)
+      cout<<f[i]<<" ";
+    cout<<"\n";
+  }
+
 
 }
 
@@ -76,10 +107,10 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag, int n)
     sigma = raw[++idx];
     pieceCountWeight = raw[++idx];
 
-    srand(time(0));
+  //  srand(time(0));
     resetNeurons();
 
-    //TODO augment weights here if flag is set - using correct distribution (can be added to savefile)
+    //TODO enforce limits on weights, etc if needed
     if(augFlag)
     {
       UniformDistribution U(-0.1, 0.1);
@@ -88,10 +119,12 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag, int n)
       //int n = 30;
       float tau = 1. / sqrt(2 * sqrt((float)n));
       //mutate values
-      kingValue = kingValue + U.GetDistributionNumber();
-      sigma = sigma * pow(tau, N.GetDistributionNumber());  //check if it is exp(tau*rand)
+      float kPrime = kingValue + U.GetDistributionNumber();
+      if(kPrime <= 3.0 && kPrime >= 1.0)
+        kingValue = kPrime;
+      sigma = sigma * exp(tau * N.GetDistributionNumber());  //check if it is pow(tau,rand)
       pieceCountWeight = sigma * N.GetDistributionNumber();
-      
+
       //mutate weights
       for(int i = idx; i < raw.size(); i++)
         raw[i] = raw[i] + sigma * N.GetDistributionNumber();
@@ -128,7 +161,7 @@ bool NeuralNetwork::saveNetwork(std::string fname)
     ofs<<kingValue<<" ";
     ofs<<sigma<<" ";
     ofs<<pieceCountWeight<<" ";
-    for(int layer = 0; layer < _weights.size(); layer++)
+    for(int layer = 0; layer < _layers.size()-1; layer++)
       for(int idx = 0; idx < _weights[layer].size(); idx++)
       {
         float f[8];
@@ -194,18 +227,48 @@ int NeuralNetwork::getWeightCount()
 
 void NeuralNetwork::randomizeWeights()
 {
-  _weights = vector<vector<__m256*>>(_layers.size());
+  _weights = vector<vector<__m256*>>(_layers.size()-1);
 
   for (int layer = 0; layer < _layers.size() - 1; layer++)
   {
+    int count = 0;
     _weights[layer] = vector<__m256*>((_layers[layer] * _layers[layer + 1])/8);
+
+    UniformDistribution U(-0.2, 0.2);
+
     for (int weightIndex = 0; weightIndex < _weights[layer].size(); ++weightIndex)
     {
-      __m256 randoms = getRandomWeight();
-      _weights[layer][weightIndex] = &randoms;
+      float randomWeight[8];
+
+      for(int i = 0; i < 8; i++)
+      {
+
+        randomWeight[i] = U.GetDistributionNumber();
+
+
+        // randomWeight[i] = rand() % 101; // [0, 100]
+        // randomWeight[i] /= 100.0; // [0, 1];
+        // randomWeight[i] *= 0.4; // [0, 0.4]
+        // randomWeight[i] -= 0.2; // [-0.2, 0.2]
+        // if(layer == 0 && weightIndex == 0)
+        //   cout<<randomWeight[i]<<" ";
+      }
+
+
+  //    _weights[layer].push_back(_mm256_load_ps(&randomWeight[0]));
+    //  *(_weights[layer][weightIndex]) = _mm256_load_ps(&randomWeight[0]);
+      __m256 randoms =  _mm256_load_ps(&randomWeight[0]);
+      _weights[layer][weightIndex] = new __m256();
+      *(_weights[layer][weightIndex]) = randoms;
     }
+
   }
-  //set pieceCountWeight
+//   float f[8];
+//   _mm256_store_ps(&f[0], *(_weights[0][0]));//*rwt[0]);
+//   for(int i = 0; i < 8; i++)
+//     cout<<f[i]<<" ";
+//   cout<<"\n";
+
   pieceCountWeight = rand() % 101 / 100. * 0.4 - 0.2;
 }
 
@@ -213,9 +276,12 @@ void NeuralNetwork::randomizeWeights()
 __m256 NeuralNetwork::getRandomWeight()
 {
 	float randomWeight[8];
+//  UniformDistribution U(-0.2, 0.2);
+
 
   for(int i = 0; i < 8; i++)
   {
+    //randomWeight[i] = U.GetDistributionNumber();
     randomWeight[i] = rand() % 101; // [0, 100]
   	randomWeight[i] /= 100.0; // [0, 1];
   	randomWeight[i] *= 0.4; // [0, 0.4]

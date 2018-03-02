@@ -39,28 +39,33 @@ int main()
                         ' ',' ',' ',' ',
                         'b','b','b','b',
                     };
-
-
+{
   NeuralNetwork test({32, 40, 16, 1});
-  NeuralNetwork test2({32, 112, 80, 64, 16, 1});
-  test2.saveNetwork("test.save.txt");
-  NeuralNetwork test3("test.save.txt", true);
-  test3.saveNetwork("test2.save.txt");
+  test.saveNetwork("net1");
+  // test2.saveNetwork("test.save.txt");
+  // NeuralNetwork test3("test.save.txt", true);
+  // test3.saveNetwork("test2.save.txt");
 
   cout<<"Test board has 3x more red pieces than black, random weights [-.2,.2]\n";
   cout<<"4 Layer Network output\n";
   cout<< "Black evaluation: "<<test.GetBoardEvaluation(false, board)<<"\n";
   cout<< "Red evaluation: "<<test.GetBoardEvaluation(true, board)<<"\n";
+  // //timing
+  timeNN(test, board);
+}
+{
+  NeuralNetwork test2({32, 112, 80, 64, 16, 1});
+  test2.saveNetwork("net2");
   cout<<"6 Layer Network output\n";
   cout<< "Black evaluation: "<<test2.GetBoardEvaluation(false, board)<<"\n";
   cout<< "Red evaluation: "<<test2.GetBoardEvaluation(true, board)<<"\n";
-  cout<<"Output from offspring of above network\n";
-  cout<< "Black evaluation: "<<test3.GetBoardEvaluation(false, board)<<"\n";
-  cout<< "Red evaluation: "<<test3.GetBoardEvaluation(true, board)<<"\n";
+  // cout<<"Output from offspring of above network\n";
+  // cout<< "Black evaluation: "<<test3.GetBoardEvaluation(false, board)<<"\n";
+  // cout<< "Red evaluation: "<<test3.GetBoardEvaluation(true, board)<<"\n";
+  //
 
-  //timing
-  timeNN(test, board);
-  timeNN(test2, board);
+   timeNN(test2, board);
+ }
 
   return 0;
 }

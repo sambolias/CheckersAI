@@ -32,10 +32,12 @@ class NeuralNetwork
 //save/load functions
   std::vector<float> parseFile(std::string fname);
 
+
 public:
   // for each integer, creates a layer with format[index] neurons
   NeuralNetwork(const std::vector<int> & layers);
   NeuralNetwork(std::string fname, bool augFlag, int n=30);
+//  ~NeuralNetwork();
   bool saveNetwork(std::string fname);
   int getNeuronCount();
   int getWeightCount();
