@@ -25,6 +25,7 @@ using std::exception;
 #include "UniformDistribution.h"
 #include "NeuralNetwork.hpp"
 
+//excess commenting will be cleaned up after debug
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 //this one doesnt work on linux
@@ -71,20 +72,20 @@ NeuralNetwork::NeuralNetwork(const std::vector<int> & layers)
 // vector<__m256*> rwt; rwt.push_back(&rw);
 //_weights[0][0] = &rw;
   //debug
-  {
-    float f[8];
-    _mm256_store_ps(&f[0], *(_weights[0][0]));//*rwt[0]);
-    for(int i = 0; i < 8; i++)
-      cout<<f[i]<<" ";
-    cout<<"\n";
-  }
-  {
-    float f[8];
-    _mm256_store_ps(&f[0], *(_weights[0][1]));//*rwt[0]);
-    for(int i = 0; i < 8; i++)
-      cout<<f[i]<<" ";
-    cout<<"\n";
-  }
+  // {
+  //   float f[8];
+  //   _mm256_store_ps(&f[0], *(_weights[0][0]));//*rwt[0]);
+  //   for(int i = 0; i < 8; i++)
+  //     cout<<f[i]<<" ";
+  //   cout<<"\n";
+  // }
+  // {
+  //   float f[8];
+  //   _mm256_store_ps(&f[0], *(_weights[0][1]));//*rwt[0]);
+  //   for(int i = 0; i < 8; i++)
+  //     cout<<f[i]<<" ";
+  //   cout<<"\n";
+  // }
 
 
 }
@@ -123,7 +124,7 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag, int n)
       if(kPrime <= 3.0 && kPrime >= 1.0)
         kingValue = kPrime;
       sigma = sigma * exp(tau * N.GetDistributionNumber());  //check if it is pow(tau,rand)
-      pieceCountWeight = sigma * N.GetDistributionNumber();
+      pieceCountWeight = pieceCountWeight + sigma * N.GetDistributionNumber();
 
       //mutate weights
       for(int i = idx; i < raw.size(); i++)
@@ -131,15 +132,15 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag, int n)
     }
     //set weights
     float * f = &raw[idx];
-    _weights = vector<vector<__m256*>>(_layers.size());
+    _weights = vector<vector<__m256>>(_layers.size());
     for (int layer = 0; layer < _layers.size() - 1; layer++)
     {
-      _weights[layer] = vector<__m256*>((_layers[layer] * _layers[layer + 1])/8);
+      _weights[layer] = vector<__m256>((_layers[layer] * _layers[layer + 1])/8);
 
       for (int weightIndex = 0; weightIndex < _weights[layer].size(); ++weightIndex)
       {
-        __m256 weight = _mm256_load_ps(&f[idx]);
-        _weights[layer][weightIndex] = &weight;
+      //  __m256 weight = _mm256_load_ps(&f[idx]);
+        _weights[layer][weightIndex] = _mm256_load_ps(&f[idx]);//&weight;
         idx+=8; //grabbing 8 raw weights at a time
       }
     }
@@ -165,7 +166,7 @@ bool NeuralNetwork::saveNetwork(std::string fname)
       for(int idx = 0; idx < _weights[layer].size(); idx++)
       {
         float f[8];
-        _mm256_store_ps(&f[0], *_weights[layer][idx]);
+        _mm256_store_ps(&f[0], _weights[layer][idx]);
         for(int i = 0; i < 8; i++)
           ofs<<f[i]<<" ";
       }
@@ -197,7 +198,7 @@ vector<float> NeuralNetwork::parseFile(std::string fname)
   {
     cout<<e.what();
     ifs.close();
-    return vector<float>();
+    return vector<float>(); //return empty vector if throws
   }
   ifs.close();
   return values;
@@ -227,39 +228,48 @@ int NeuralNetwork::getWeightCount()
 
 void NeuralNetwork::randomizeWeights()
 {
-  _weights = vector<vector<__m256*>>(_layers.size()-1);
+  _weights = vector<vector<__m256>>(_layers.size()-1);
 
   for (int layer = 0; layer < _layers.size() - 1; layer++)
   {
     int count = 0;
-    _weights[layer] = vector<__m256*>((_layers[layer] * _layers[layer + 1])/8);
+    _weights[layer] = vector<__m256>((_layers[layer] * _layers[layer + 1])/8);
 
-    UniformDistribution U(-0.2, 0.2);
+    //UniformDistribution U(-0.2, 0.2);
 
     for (int weightIndex = 0; weightIndex < _weights[layer].size(); ++weightIndex)
     {
-      float randomWeight[8];
+    //  float randomWeight[8];
 
-      for(int i = 0; i < 8; i++)
-      {
-
-        randomWeight[i] = U.GetDistributionNumber();
-
-
-        // randomWeight[i] = rand() % 101; // [0, 100]
-        // randomWeight[i] /= 100.0; // [0, 1];
-        // randomWeight[i] *= 0.4; // [0, 0.4]
-        // randomWeight[i] -= 0.2; // [-0.2, 0.2]
-        // if(layer == 0 && weightIndex == 0)
-        //   cout<<randomWeight[i]<<" ";
-      }
+      // for(int i = 0; i < 8; i++)
+      // {
+      //
+      //   randomWeight[i] = U.GetDistributionNumber();
+      //
+      //
+      //   // randomWeight[i] = rand() % 101; // [0, 100]
+      //   // randomWeight[i] /= 100.0; // [0, 1];
+      //   // randomWeight[i] *= 0.4; // [0, 0.4]
+      //   // randomWeight[i] -= 0.2; // [-0.2, 0.2]
+      //   // if(layer == 0 && weightIndex == 0)
+      //   //   cout<<randomWeight[i]<<" ";
+      // }
 
 
   //    _weights[layer].push_back(_mm256_load_ps(&randomWeight[0]));
     //  *(_weights[layer][weightIndex]) = _mm256_load_ps(&randomWeight[0]);
-      __m256 randoms =  _mm256_load_ps(&randomWeight[0]);
-      _weights[layer][weightIndex] = new __m256();
-      *(_weights[layer][weightIndex]) = randoms;
+  //    __m256 randoms =  _mm256_load_ps(&randomWeight[0]);
+    //  auto r = getRandomWeight();
+      _weights[layer][weightIndex] = getRandomWeight();
+      // if(layer == 0 && weightIndex < 20)
+      // {
+      //     float f[8];
+      //     _mm256_store_ps(&f[0], r);//*rwt[0]);
+      //     for(int i = 0; i < 8; i++)
+      //       cout<<f[i]<<" ";
+      //     cout<<"\n";
+      // }
+    //  *(_weights[layer][weightIndex]) = randoms;
     }
 
   }
@@ -268,20 +278,21 @@ void NeuralNetwork::randomizeWeights()
 //   for(int i = 0; i < 8; i++)
 //     cout<<f[i]<<" ";
 //   cout<<"\n";
-
-  pieceCountWeight = rand() % 101 / 100. * 0.4 - 0.2;
+  UniformDistribution U(-0.2, 0.2);
+  pieceCountWeight = U.GetDistributionNumber();//rand() % 101 / 100. * 0.4 - 0.2;
 }
 
 // [-0.2, 0.2]
 __m256 NeuralNetwork::getRandomWeight()
 {
 	float randomWeight[8];
-//  UniformDistribution U(-0.2, 0.2);
+  UniformDistribution U(-0.2, 0.2);
 
 
   for(int i = 0; i < 8; i++)
   {
-    //randomWeight[i] = U.GetDistributionNumber();
+  //  randomWeight[i] = U.GetDistributionNumber();
+
     randomWeight[i] = rand() % 101; // [0, 100]
   	randomWeight[i] /= 100.0; // [0, 1];
   	randomWeight[i] *= 0.4; // [0, 0.4]
@@ -293,13 +304,13 @@ __m256 NeuralNetwork::getRandomWeight()
 
 void NeuralNetwork::resetNeurons()
 {
-  _neurons = vector<vector<__m256*>>(_layers.size());
+  _neurons = vector<vector<__m256>>(_layers.size());
 
   for (int layer = 0; layer < _layers.size()-1; ++layer)
   {
     float z = 0.;
     __m256 zeros = _mm256_broadcast_ss(&z);
-    _neurons[layer] = vector<__m256*>(_layers[layer]/8, &zeros);
+    _neurons[layer] = vector<__m256>(_layers[layer]/8, zeros);
   }
 }
 
@@ -385,7 +396,7 @@ float NeuralNetwork::GetBoardEvaluation(bool isRedPlayer, const vector<char> & b
   for(int i = 0; i < firstLayer.size(); i+=8)
   {
     __m256 temp = _mm256_load_ps(&fl[i]);
-    _neurons[0][i/8] = &temp;
+    _neurons[0][i/8] = temp;
   }
 
   return getLayerEvaluation();
@@ -433,10 +444,10 @@ float NeuralNetwork::getLayerEvaluation()
       for (int previousNeuronsIndex = 0; previousNeuronsIndex < previousLayerSize; ++previousNeuronsIndex)
       {
         weightsIndex = previousLayerSize * neuronsIndex + previousNeuronsIndex;
-        currentNeurons = _mm256_add_ps(currentNeurons , (_mm256_mul_ps((*_weights[previousLayer][weightsIndex]) , (*_neurons[previousLayer][previousNeuronsIndex]))));
+        currentNeurons = _mm256_add_ps(currentNeurons , (_mm256_mul_ps((_weights[previousLayer][weightsIndex]) , (_neurons[previousLayer][previousNeuronsIndex]))));
       }
       currentNeurons = sigmoidFunction(currentNeurons);
-      _neurons[layer][neuronsIndex] = &currentNeurons;
+      _neurons[layer][neuronsIndex] = currentNeurons;
     }
   }
 
@@ -448,7 +459,7 @@ float NeuralNetwork::getLayerEvaluation()
   for (int previousNeuronsIndex = 0; previousNeuronsIndex < lastLayerSize; ++previousNeuronsIndex)
   {
     int weightsIndex = previousNeuronsIndex;
-    outputNeuronInput += simdSumOfFloats(_mm256_mul_ps((*_weights[lastLayer][weightsIndex]) , (*_neurons[lastLayer][previousNeuronsIndex])));
+    outputNeuronInput += simdSumOfFloats(_mm256_mul_ps((_weights[lastLayer][weightsIndex]) , (_neurons[lastLayer][previousNeuronsIndex])));
   }
   //add in _pieceCount
   outputNeuronInput += pieceCountWeight*_pieceCount;

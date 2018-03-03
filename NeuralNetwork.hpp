@@ -5,15 +5,21 @@
 #include <immintrin.h>
 #include <string>
 
+//This code will not run compiled with windows g++
+//includes compile.bat but requires shell with cl (visual studios environment)
+//g++ bug from problem with 32 bit stack alignment
+//https://stackoverflow.com/questions/30926241/wrapper-for-m256-producing-segmentation-fault-with-constructor
+//https://gcc.gnu.org/bugzilla/show_bug.cgi?id=49001
+//https://gcc.gnu.org/bugzilla/show_bug.cgi?id=54412
 
 class NeuralNetwork
 {
   // Each layer holds an array of neuron outputs. (eg. _layers[0] = 10 sets the neuron output in the first layer to 10)
   std::vector<int> _layers;
   // _neurons[layer].size() == the number of neruons in that layer
-  std::vector<std::vector<__m256*>> _neurons;
+  std::vector<std::vector<__m256>> _neurons;
   // _weights[layer].size() == the number of connections between the neurons in layer and layer + 1
-  std::vector<std::vector<__m256*>> _weights;
+  std::vector<std::vector<__m256>> _weights;
 
   float pieceCountWeight;
   float _pieceCount;
