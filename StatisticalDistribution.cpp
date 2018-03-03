@@ -6,11 +6,14 @@ using std::default_random_engine;
 using std::map;
 #include <cmath>
 using std::floor;
+#include <chrono>
 
 StatisticalDistribution::StatisticalDistribution()
-{ 
+{
 	unsigned _seed = time(0);
-	_numberGenerator = default_random_engine(_seed);
+
+	unsigned _seed1 = std::chrono::system_clock::now().time_since_epoch().count();
+	_numberGenerator = default_random_engine(_seed1);
 }
 
 

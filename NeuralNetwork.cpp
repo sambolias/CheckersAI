@@ -291,12 +291,12 @@ __m256 NeuralNetwork::getRandomWeight()
 
   for(int i = 0; i < 8; i++)
   {
-  //  randomWeight[i] = U.GetDistributionNumber();
+    randomWeight[i] = U.GetDistributionNumber();
 
-    randomWeight[i] = rand() % 101; // [0, 100]
-  	randomWeight[i] /= 100.0; // [0, 1];
-  	randomWeight[i] *= 0.4; // [0, 0.4]
-  	randomWeight[i] -= 0.2; // [-0.2, 0.2]
+    // randomWeight[i] = rand() % 101; // [0, 100]
+  	// randomWeight[i] /= 100.0; // [0, 1];
+  	// randomWeight[i] *= 0.4; // [0, 0.4]
+  	// randomWeight[i] -= 0.2; // [-0.2, 0.2]
   }
   auto rw = _mm256_load_ps(&randomWeight[0]);
 	return rw;
