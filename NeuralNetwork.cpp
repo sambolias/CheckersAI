@@ -25,37 +25,34 @@ using std::exception;
 #include "UniformDistribution.h"
 #include "NeuralNetwork.hpp"
 
-//excess commenting will be cleaned up after debug
+//set the sigmoid function to use
+// 0 uses external lib, 1 uses weird abs value simd trick
+//1 is much faster TODO check graph of both sigmoids to see which fits better
+#define SIGMOID_FUNC 1
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-//this one doesnt work on linux
-#include "avx_exp.h"
-#else
-//this doesnt work on windows
-//source http://software-lisc.fbk.eu/avx_mathfun/
-//TODO find license info
-#include "avx_mathfun.h"
+#if SIGMOID_FUNC == 0
+  #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+  //this one doesnt work on linux
+  #include "avx_exp.h"
+  #else
+  //this doesnt work on windows
+  //source http://software-lisc.fbk.eu/avx_mathfun/
+  //TODO find license info
+  #include "avx_mathfun.h"
+  #endif
 #endif
 
-// NeuralNetwork::~NeuralNetwork()
-// {
-//   // for(int i = 0; i < _weights.size(); i++)
-//   //   for(int j = 0; j < _weights[i].size(); j++)
-//   //     delete _weights[i][j];
-// }
 
 //format like (N0, N1, N2,..., Ni) where N is the number of neurons in the given layer i
 NeuralNetwork::NeuralNetwork(const std::vector<int> & layers)
 {
   //TODO make sure all but last layers are multiples of 8
-
   if (layers.empty() || (layers[0] != 32))
   {
     cout << "Error neural network is either empty, or the input layer does not have 32 neurons.\n";
     return;
   }
-  //seed rand
-  srand(time(0));
+
   //random kingValue [1,3]
   UniformDistribution U(1.0, 3.0);
 
@@ -66,32 +63,10 @@ NeuralNetwork::NeuralNetwork(const std::vector<int> & layers)
   _layers = layers;
   resetNeurons();
   randomizeWeights();
-// cout<<pieceCountWeight<<"\n";
-// float randomWeight[8] = {1,2,3,4,5,6,7,8};
-// auto rw = getRandomWeight();//_mm256_load_ps(&randomWeight[0]);
-// vector<__m256*> rwt; rwt.push_back(&rw);
-//_weights[0][0] = &rw;
-  //debug
-  // {
-  //   float f[8];
-  //   _mm256_store_ps(&f[0], *(_weights[0][0]));//*rwt[0]);
-  //   for(int i = 0; i < 8; i++)
-  //     cout<<f[i]<<" ";
-  //   cout<<"\n";
-  // }
-  // {
-  //   float f[8];
-  //   _mm256_store_ps(&f[0], *(_weights[0][1]));//*rwt[0]);
-  //   for(int i = 0; i < 8; i++)
-  //     cout<<f[i]<<" ";
-  //   cout<<"\n";
-  // }
-
-
 }
 
 //augFlag mutates loaded board
-NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag, int n)
+NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag)
 {
   vector<float> raw = parseFile(fname);
   if(!raw.empty())
@@ -108,21 +83,22 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag, int n)
     sigma = raw[++idx];
     pieceCountWeight = raw[++idx];
 
-  //  srand(time(0));
     resetNeurons();
 
-    //TODO enforce limits on weights, etc if needed
+    //mutate as offspring of save file
     if(augFlag)
     {
+      //random number generators
       UniformDistribution U(-0.1, 0.1);
       NormalDistribution N(0, 1);
-      //mutation constants - n from ctor
-      //int n = 30;
+      //mutation constants
+      int n = raw.size() - idx + 1; //n is weight count
       float tau = 1. / sqrt(2 * sqrt((float)n));
       //mutate values
       float kPrime = kingValue + U.GetDistributionNumber();
       if(kPrime <= 3.0 && kPrime >= 1.0)
         kingValue = kPrime;
+      //TODO limits on weights or sigma??
       sigma = sigma * exp(tau * N.GetDistributionNumber());  //check if it is pow(tau,rand)
       pieceCountWeight = pieceCountWeight + sigma * N.GetDistributionNumber();
 
@@ -139,8 +115,7 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag, int n)
 
       for (int weightIndex = 0; weightIndex < _weights[layer].size(); ++weightIndex)
       {
-      //  __m256 weight = _mm256_load_ps(&f[idx]);
-        _weights[layer][weightIndex] = _mm256_load_ps(&f[idx]);//&weight;
+        _weights[layer][weightIndex] = _mm256_load_ps(&f[idx]);
         idx+=8; //grabbing 8 raw weights at a time
       }
     }
@@ -235,51 +210,14 @@ void NeuralNetwork::randomizeWeights()
     int count = 0;
     _weights[layer] = vector<__m256>((_layers[layer] * _layers[layer + 1])/8);
 
-    //UniformDistribution U(-0.2, 0.2);
-
     for (int weightIndex = 0; weightIndex < _weights[layer].size(); ++weightIndex)
     {
-    //  float randomWeight[8];
-
-      // for(int i = 0; i < 8; i++)
-      // {
-      //
-      //   randomWeight[i] = U.GetDistributionNumber();
-      //
-      //
-      //   // randomWeight[i] = rand() % 101; // [0, 100]
-      //   // randomWeight[i] /= 100.0; // [0, 1];
-      //   // randomWeight[i] *= 0.4; // [0, 0.4]
-      //   // randomWeight[i] -= 0.2; // [-0.2, 0.2]
-      //   // if(layer == 0 && weightIndex == 0)
-      //   //   cout<<randomWeight[i]<<" ";
-      // }
-
-
-  //    _weights[layer].push_back(_mm256_load_ps(&randomWeight[0]));
-    //  *(_weights[layer][weightIndex]) = _mm256_load_ps(&randomWeight[0]);
-  //    __m256 randoms =  _mm256_load_ps(&randomWeight[0]);
-    //  auto r = getRandomWeight();
       _weights[layer][weightIndex] = getRandomWeight();
-      // if(layer == 0 && weightIndex < 20)
-      // {
-      //     float f[8];
-      //     _mm256_store_ps(&f[0], r);//*rwt[0]);
-      //     for(int i = 0; i < 8; i++)
-      //       cout<<f[i]<<" ";
-      //     cout<<"\n";
-      // }
-    //  *(_weights[layer][weightIndex]) = randoms;
     }
-
   }
-//   float f[8];
-//   _mm256_store_ps(&f[0], *(_weights[0][0]));//*rwt[0]);
-//   for(int i = 0; i < 8; i++)
-//     cout<<f[i]<<" ";
-//   cout<<"\n";
+
   UniformDistribution U(-0.2, 0.2);
-  pieceCountWeight = U.GetDistributionNumber();//rand() % 101 / 100. * 0.4 - 0.2;
+  pieceCountWeight = U.GetDistributionNumber();
 }
 
 // [-0.2, 0.2]
@@ -288,15 +226,9 @@ __m256 NeuralNetwork::getRandomWeight()
 	float randomWeight[8];
   UniformDistribution U(-0.2, 0.2);
 
-
   for(int i = 0; i < 8; i++)
   {
     randomWeight[i] = U.GetDistributionNumber();
-
-    // randomWeight[i] = rand() % 101; // [0, 100]
-  	// randomWeight[i] /= 100.0; // [0, 1];
-  	// randomWeight[i] *= 0.4; // [0, 0.4]
-  	// randomWeight[i] -= 0.2; // [-0.2, 0.2]
   }
   auto rw = _mm256_load_ps(&randomWeight[0]);
 	return rw;
@@ -314,43 +246,45 @@ void NeuralNetwork::resetNeurons()
   }
 }
 
-// returns a float between -1 and 1
-float NeuralNetwork::sigmoidFunction(float x)
-{
-	const float s = 4;
-	const float e = 2.718281828;
-	// [-1,1] : 2 / (1 + e^-sx) - 1
-	return 2.0 / (1 + pow(e, (-s * x))) - 1;
-}
+#if SIGMOID_FUNC == 0
+  // returns a float between -1 and 1
+  float NeuralNetwork::sigmoidFunction(float x)
+  {
+  	const float s = 4;
+  	const float e = 2.718281828;
+  	// [-1,1] : 2 / (1 + e^-sx) - 1
+  	return 2.0 / (1 + pow(e, (-s * x))) - 1;
+  }
 
-// returns a float between -1 and 1
-__m256 NeuralNetwork::sigmoidFunction(__m256 x)
-{
-	const float s = -4.;
-  __m256 _s = _mm256_broadcast_ss(&s);
-  const float one = 1.;
-  __m256 _one = _mm256_broadcast_ss(&one);
-  const float two = 2.;
-  __m256 _two = _mm256_broadcast_ss(&two);
+  // returns a float between -1 and 1
+  __m256 NeuralNetwork::sigmoidFunction(__m256 x)
+  {
+  	const float s = -4.;
+    __m256 _s = _mm256_broadcast_ss(&s);
+    const float one = 1.;
+    __m256 _one = _mm256_broadcast_ss(&one);
+    const float two = 2.;
+    __m256 _two = _mm256_broadcast_ss(&two);
 
-  //return 2.0 / (1 + pow(e, (-s * x))) - 1;
-  __m256 _sig = _mm256_sub_ps(_mm256_div_ps(_two, (_mm256_add_ps(_one , exp256_ps(_mm256_mul_ps(_s,x))))) , _one);
-  return _sig;
-}
+    //return 2.0 / (1 + pow(e, (-s * x))) - 1;
+    __m256 _sig = _mm256_sub_ps(_mm256_div_ps(_two, (_mm256_add_ps(_one , exp256_ps(_mm256_mul_ps(_s,x))))) , _one);
+    return _sig;
+  }
+#else
+  //  alternate sigmoids not dependant on exponent - cross platform
+  float NeuralNetwork::sigmoidFunction(float x)
+  {
+  	return x / (1 + abs(x));
+  }
+  __m256 NeuralNetwork::sigmoidFunction(__m256 x)
+  {
+  	const float one = 1.;
+  	__m256 _one = _mm256_broadcast_ss(&one);
+  	//ugly square root for abs() = sqrt(x*x)...
+  	return _mm256_div_ps(x, (_mm256_add_ps(_mm256_sqrt_ps(_mm256_mul_ps(x, x)), _one)));
+  }
+#endif
 
-/*  alternate sigmoids not dependant on exponent - cross platform
-float NeuralNetwork::sigmoidFunction(float x)
-{
-	return x / (1 + abs(x));
-}
-__m256 NeuralNetwork::sigmoidFunction(__m256 x)
-{
-	const float one = 1.;
-	__m256 _one = _mm256_broadcast_ss(&one);
-	//ugly square root for abs() = sqrt(x*x)...
-	return _mm256_div_ps(x, (_mm256_add_ps(_mm256_sqrt_ps(_mm256_mul_ps(x, x)), _one)));
-}
-*/
 float NeuralNetwork::GetBoardEvaluation(bool isRedPlayer, const vector<char> & board)
 {
   float input;
