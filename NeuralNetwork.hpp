@@ -26,7 +26,7 @@ class NeuralNetwork
   float kingValue;
   float sigma;
 
-//evaluation functions
+  //evaluation functions
   void resetNeurons();
   void randomizeWeights();
   __m256 sigmoidFunction(__m256 x);
@@ -34,20 +34,17 @@ class NeuralNetwork
   __m256 getRandomWeight();
   float getLayerEvaluation();
   float simdSumOfFloats(__m256 floats);
-
-//save/load functions
-  std::vector<float> parseFile(std::string fname);
-
-
 public:
   // for each integer, creates a layer with format[index] neurons
   NeuralNetwork(const std::vector<int> & layers);
-  NeuralNetwork(std::string fname, bool augFlag);
-//  ~NeuralNetwork();
-  bool saveNetwork(std::string fname);
+  NeuralNetwork(std::vector<float> & raw, bool doesEvolve = false);
   int getNeuronCount();
   int getWeightCount();
   float GetBoardEvaluation(bool isRedPlayer, const std::vector<char> & board);
+  std::string ToString();
+  std::vector<float> GetWeights();
+  float GetSigma();
+  float GetKingValue();
 };
 
 #endif

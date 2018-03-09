@@ -1,5 +1,6 @@
 #include "BoardDisplay.h"
 #include "DistributionTestDisplay.h"
+#include "NetworkEvolverTestDisplay.h"
 #include "NormalDistribution.h"
 #include "UniformDistribution.h"
 #include <QDebug>
@@ -37,6 +38,9 @@ BoardDisplay::BoardDisplay()
 	// Uniform Distribution
 	QAction* uniformDistributionTestAction = menuTests->addAction("Uniform Distribution Test");
 	connect(uniformDistributionTestAction, SIGNAL(triggered()), this, SLOT(uniformDistribtutionTest()));
+	// Network Evolver
+	QAction* networkEvolverTestAction = menuTests->addAction("Network Evolver Test");
+	connect(networkEvolverTestAction, SIGNAL(triggered()), this, SLOT(networkEvolverTest()));
 
 	QMenuBar* mainMenu = this->menuBar();
 	mainMenu->addMenu(menuGame);
@@ -135,4 +139,10 @@ void BoardDisplay::uniformDistribtutionTest()
 	QSharedPointer<StatisticalDistribution> distribution = QSharedPointer<UniformDistribution>::create(lowerBound, upperBound);
 	DistributionTestDisplay * distributionTestDisplay = new DistributionTestDisplay(this);
 	distributionTestDisplay->start(distribution, amount, increment);
+}
+
+void BoardDisplay::networkEvolverTest()
+{
+	NetworkEvolverTestDisplay *display = new NetworkEvolverTestDisplay(this);
+	display->start();
 }
