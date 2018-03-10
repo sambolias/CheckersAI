@@ -362,6 +362,7 @@ Ex: layer 1 has ABC, layer 2 has DEF, and layer 3 has G
 */
 float NeuralNetwork::getLayerEvaluation()
 {
+ // int countWeights=0;
   float z = 0.;
   __m256 zeros = _mm256_broadcast_ss(&z);
   for(int layer = 1; layer < _layers.size()-1; layer++)
@@ -371,19 +372,31 @@ float NeuralNetwork::getLayerEvaluation()
     int layerSize = _layers[layer]/8;
     int weightsIndex;
     __m256 currentNeurons;
-    for (int neuronsIndex = 0; neuronsIndex < layerSize; ++neuronsIndex)
+    float floats[8];
+    int countEight = 0;
+    for (int neuronsIndex = 0; neuronsIndex < layerSize; neuronsIndex)  //neuronIndex incrimented below when counted 8
     {
       currentNeurons = zeros;
 
-      for (int previousNeuronsIndex = 0; previousNeuronsIndex < previousLayerSize; ++previousNeuronsIndex)
-      {
+      for (int previousNeuronsIndex = 0; previousNeuronsIndex < previousLayerSize; ++previousNeuronsIndex)  //walk through previous neurons 1 at a time
+      {      
+     //   countWeights+=8;
         weightsIndex = previousLayerSize * neuronsIndex + previousNeuronsIndex;
-        currentNeurons = _mm256_add_ps(currentNeurons , (_mm256_mul_ps((_weights[previousLayer][weightsIndex]) , (_neurons[previousLayer][previousNeuronsIndex]))));
+        currentNeurons = _mm256_add_ps(currentNeurons , (_mm256_mul_ps((_weights[previousLayer][weightsIndex]) , (_neurons[previousLayer][previousNeuronsIndex]))));        
       }
-      currentNeurons = sigmoidFunction(currentNeurons);
-      _neurons[layer][neuronsIndex] = currentNeurons;
+      
+      floats[countEight] = simdSumOfFloats(currentNeurons);
+      countEight++;
+      if(countEight == 8)
+      {
+        countEight = 0;
+        currentNeurons = _mm256_load_ps(&floats[0]);
+        _neurons[layer][neuronsIndex] = sigmoidFunction(currentNeurons);
+        neuronsIndex++;
+      }
     }
   }
+
 
   //need to handle last neuron solo
   float outputNeuronInput = 0;
@@ -392,12 +405,13 @@ float NeuralNetwork::getLayerEvaluation()
 
   for (int previousNeuronsIndex = 0; previousNeuronsIndex < lastLayerSize; ++previousNeuronsIndex)
   {
+  //  countWeights+=8;
     int weightsIndex = previousNeuronsIndex;
     outputNeuronInput += simdSumOfFloats(_mm256_mul_ps((_weights[lastLayer][weightsIndex]) , (_neurons[lastLayer][previousNeuronsIndex])));
   }
   //add in _pieceCount
   outputNeuronInput += pieceCountWeight*_pieceCount;
-
+ // cout<<++countWeights<<" "<<getWeightCount()<<"\n";
   //return final output
   return sigmoidFunction(outputNeuronInput);
 }
