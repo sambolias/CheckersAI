@@ -19,7 +19,8 @@ public:
 	const int BLACK_TURN;
 	Game(std::shared_ptr<Player> playerOne, std::shared_ptr<Player> playerTwo);
 	void TakeNextTurn();
-	std::vector<std::vector<char>> GetBoard();
+	std::vector<char> & GetBoard();
+	std::vector<std::vector<char>> GetBoardAsMatrix();
 	bool IsOver();
 	int GetTurn();
 	Player & GetCurrentPlayer();

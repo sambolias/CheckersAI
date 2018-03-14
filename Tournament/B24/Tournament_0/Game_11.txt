@@ -1,0 +1,44 @@
+Winner: NN_3
+Red: NN_3
+Black: NN_2
+r r r r r r r r r r r r - - - - - - - - b b b b b b b b b b b b 
+r r r r r r r r - r r r r - - - - - - - b b b b b b b b b b b b 
+r r r r r r r r - r r r r - - - b - - - b - b b b b b b b b b b 
+r r r r r r r r - r r r - - - - - - - - b r b b b b b b b b b b 
+r r r r r r r r - r r r - - - - b - - - b - b b b - b b b b b b 
+r r r r r r r r - - r r - r - - b - - - b - b b b - b b b b b b 
+r r r r r r r r - b r r - - - - - - - - b - b b b - b b b b b b 
+r r r r r r - r - - r r - r - - - - - - b - b b b - b b b b b b 
+r r r r r r - r - - r r - r - - b - - - - - b b b - b b b b b b 
+r r r r r r - r - - r r - - - - - - - - r - b b b - b b b b b b 
+r r r r r r - r - - r r - - - - - - - - r - b b b b b b b - b b 
+r r r r r r - r - - r r - - - - - - - - - - b b - b b b b R b b 
+r r r r r r - r - - r r - - - - - - b - - - - b - b b b b R b b 
+r r r r r r - r - - r r - - - R - - - - - - - b - - b b b - b b 
+r r r r r r - r - - r r - - - R - - - - - - - b b - b b - - b b 
+r r r r r r - r - - r r - - - - - - R - - - - b b - b b - - b b 
+r r r r r r - r - - r r - - b - - - - - - - - - b - b b - - b b 
+r r r r r r - r - - - r - - - - - r - - - - - - b - b b - - b b 
+r r r r r r - r - - - r - - - - - r - - - - b - b - - b - - b b 
+r r r r r r - r - - - r - - - - - - - - - - - - b - r b - - b b 
+r r r r r r - r - - - r - - - - - - - - - - - b b - - b - - - b 
+r r r r r r - - - - r r - - - - - - - - - - - b b - - b - - - b 
+r r r r r r - - - - r r - - - - - - - - - - - b b - b b - - - - 
+r r - r r r - r - - r r - - - - - - - - - - - b b - b b - - - - 
+r r - r r r - r - - r r - - - - - - - b - - - - b - b b - - - - 
+r r - r r r - r - - - r - - r - - - - b - - - - b - b b - - - - 
+r r - r r r - r - - - r - - r b - - - - - - - - b - b b - - - - 
+r r - r r r - r - - - - - - r - - - r - - - - - b - b b - - - - 
+r r - r r r - r - - - - - - r - - - r - - - - b b - b - - - - - 
+r r - r r r - r - - - - - - r - - - - - - - - - b - b r - - - - 
+r r - r r r - r - - - - - - r - - - - - - - - b b - - r - - - - 
+r r - r r r - r - - - - - - - - - - r - - - - b b - - r - - - - 
+r r - r r r - r - - - - - - b - - - - - - - - - b - - r - - - - 
+r r - r r - - r - r - - - - b - - - - - - - - - b - - r - - - - 
+r r - r r b - r - - - - - - - - - - - - - - - - b - - r - - - - 
+r - - r r - - r r - - - - - - - - - - - - - - - b - - r - - - - 
+r - - r r - - r r - - - - - - - - - - - b - - - - - - r - - - - 
+r - - r r - - r - - - - r - - - - - - - b - - - - - - r - - - - 
+r - - r r - - r - - - - r - - - b - - - - - - - - - - r - - - - 
+r - - r r - - r - - - - - - - - - - - - - r - - - - - r - - - - 
+r - - r r - - r - - - - - - - - - - - - - r - - - - - r - - - - 

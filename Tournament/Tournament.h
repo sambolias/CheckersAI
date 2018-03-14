@@ -3,20 +3,25 @@
 #include "Game.hpp"
 #include "NeuralNetworkPlayer.h"
 #include "NeuralNetwork.hpp"
+#include "TournamentFileHandler.h"
 #include <vector>
 #include <memory>
 #include <map>
+#include <string>
 
 class Tournament
 {
 private:
+    TournamentFileHandler _tournamentFileHandler;
     double _winWeight;
     double _lossWeight;
     double _drawWeight;
     int _maxMoves;
     int _populationSize;
-    std::map<std::shared_ptr<NeuralNetwork>, double> _neuralNetworkScores;
-    void playGame(std::shared_ptr<NeuralNetwork> red, std::shared_ptr<NeuralNetwork> black);
+    int _gameNumber;
+    int _generationNumber;
+    std::vector<std::shared_ptr<NeuralNetworkPlayer>> _players;
+    void playGame(std::shared_ptr<NeuralNetworkPlayer> redPlayer, std::shared_ptr<NeuralNetworkPlayer> blackPlayer);
 public:
     void Start(int populationSize, int maxMoves, double winWeight, double lossWeight, double drawWeight, const std::vector<int> & layers);
 };

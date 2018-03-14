@@ -4,15 +4,22 @@
 #include "ComputerPlayer.h"
 #include "NeuralNetwork.hpp"
 #include <memory>
+#include <string>
 
 class NeuralNetworkPlayer : public ComputerPlayer
 {
 private:
 	std::shared_ptr<NeuralNetwork> _neuralNetwork;
+	double _score;
+	std::string _name;
 public:
-	NeuralNetworkPlayer(char color, std::shared_ptr<NeuralNetwork> network);
+	NeuralNetworkPlayer(std::shared_ptr<NeuralNetwork> network, std::string name, char color);
 	double getHeuristic(Board & board) override;
 	std::shared_ptr<NeuralNetwork> GetNeuralNetork();
+	const std::string & GetName();
+	double GetScore();
+	void AddScore(double value);
+	void SetColor(char color);
 };
 
 

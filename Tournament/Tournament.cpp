@@ -1,6 +1,8 @@
 #include "Tournament.h"
 #include "Game.hpp"
 #include "Board.hpp"
+#include "NeuralNetworkFileHandler.h"
+#include "TournamentFileHandler.h"
 #include <vector>
 using std::vector;
 #include <memory>
@@ -11,7 +13,13 @@ using std::map;
 #include <iostream>
 using std::cout;
 using std::endl;
+#include <string>
+using std::string;
+using std::to_string;
+#include <fstream>
+using std::ofstream;
 
+// C:\Users\Frank's Laptop\Desktop\Programming\School\CS405-Intro-to-AI\CheckersAI
 void Tournament::Start(int populationSize, int maxMoves,  double winWeight, double lossWeight, double drawWeight, const vector<int> & layers)
 {
     _populationSize = populationSize;
@@ -19,63 +27,71 @@ void Tournament::Start(int populationSize, int maxMoves,  double winWeight, doub
     _winWeight = winWeight;
     _lossWeight = lossWeight;
     _drawWeight = _drawWeight;
+    _generationNumber = 0;
+    _gameNumber = 0;
 
+    _players = vector<shared_ptr<NeuralNetworkPlayer>>(populationSize, 0);
     for (int i = 0; i < populationSize; ++i)
     {
+        string playerName = "NN_" + to_string(i);
         auto network = make_shared<NeuralNetwork>(layers);
-        _neuralNetworkScores[network] = 0;
+        auto player = make_shared<NeuralNetworkPlayer>(network, playerName, Board::RED);
+        _players[i] = player;
     }
 
     // Play round robin where each network plays as red against all other networks
-    for (auto redKVPair : _neuralNetworkScores)
+    for (auto redPlayer : _players)
     {
-        for (auto blackKVPair : _neuralNetworkScores)
+        for (auto blackPlayer : _players)
         {
-            auto redNetwork = redKVPair.first;
-            auto blackNetwork = blackKVPair.first;
-            if (redNetwork == blackNetwork)
+            if (redPlayer == blackPlayer)
                 continue;
             
-            playGame(redNetwork, blackNetwork);
+            redPlayer->SetColor(Board::RED);
+            blackPlayer->SetColor(Board::BLACK);
+            playGame(redPlayer, blackPlayer);
         }
     }
 
     cout << endl << "Total Network Scores" << endl;
-    for (auto kvPair : _neuralNetworkScores)
+    for (auto player : _players)
     {
-        cout << kvPair.first << ": " << kvPair.second << endl;
+        cout << player->GetName() << ": " << player->GetScore() << endl;
     }
 }
 
-void Tournament::playGame(shared_ptr<NeuralNetwork> red, shared_ptr<NeuralNetwork> black)
+void Tournament::playGame(shared_ptr<NeuralNetworkPlayer> redPlayer, shared_ptr<NeuralNetworkPlayer> blackPlayer)
 {
-    cout << endl;
-    auto redPlayer = make_shared<NeuralNetworkPlayer>(Board::RED, red);
-    auto blackPlayer = make_shared<NeuralNetworkPlayer>(Board::BLACK, black);
     Game game(redPlayer, blackPlayer);
     int moves = 0;
-    while (!game.IsOver())
+    vector<vector<char>> boards;
+
+    while (!game.IsOver() && moves < _maxMoves)
     {
-        if (moves >= _maxMoves)
-        {
-            _neuralNetworkScores[red] += _drawWeight;
-            _neuralNetworkScores[black] += _drawWeight;
-            cout << "Its a draw!" << endl;
-            cout << "Red:   " << red << endl;
-            cout << "Black: " << black << endl;
-            return;
-        }
+        boards.push_back(game.GetBoard());
         game.TakeNextTurn();
         moves++;
     }
+    boards.push_back(game.GetBoard());
 
-    shared_ptr<NeuralNetwork> winner = (game.GetTurn() == game.BLACK_TURN) ? red : black;
-    shared_ptr<NeuralNetwork> loser = (game.GetTurn() == game.BLACK_TURN) ? black : red;
-
-    _neuralNetworkScores[winner] += _winWeight;
-    _neuralNetworkScores[loser] += _lossWeight;
-
-    cout << ((game.GetTurn() == game.BLACK_TURN) ? "Red" : "Black") << " wins!" << endl;
-    cout << "Red:   " << red << endl;
-    cout << "Black: " << black << endl;
+    string winnerName = "None";
+    string redPlayerName = redPlayer->GetName();
+    string blackPlayerName = blackPlayer->GetName();
+    
+    if (moves >= _maxMoves)
+    {
+        redPlayer->AddScore(_drawWeight);
+        blackPlayer->AddScore(_drawWeight);
+    }
+    else
+    {
+        auto winner = (game.GetTurn() == game.BLACK_TURN) ? redPlayer : blackPlayer;
+        auto loser = (game.GetTurn() == game.BLACK_TURN) ? blackPlayer : redPlayer;
+        winnerName = winner->GetName();
+        winner->AddScore(_winWeight);
+        loser->AddScore(_lossWeight);
+    }
+    // Save game
+    _tournamentFileHandler.WriteGameToFile(_generationNumber, _gameNumber, winnerName, redPlayerName, blackPlayerName, boards);
+    _gameNumber++;
 }
