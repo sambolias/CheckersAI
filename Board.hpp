@@ -16,6 +16,7 @@ public:
 	const static char K_BLACK;
 
     Board();
+	Board(const std::vector<char> & board);
 	Board & UpdateKings();
     std::vector<char> & GetBoard();
     char & operator[](int index);

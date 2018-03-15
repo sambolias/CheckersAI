@@ -23,6 +23,7 @@ void GameManager::startNewGame()
 	std::shared_ptr<Player> playerTwo = std::make_shared<ComputerPlayer>(Board::BLACK);
 	Game game = Game(playerOne, playerTwo);
 
+	display->resetBoards();
 	display->displayPieces(game.GetBoard());
 	playing = true;
 
@@ -48,10 +49,10 @@ void GameManager::startNewGame()
 			}
 		}
 		game.TakeNextTurn();
+		display->addBoard(game.GetBoard());
+		display->displayPieces(game.GetBoard());
 		if (game.IsOver())
 			break;
-
-		display->displayPieces(game.GetBoard());
 	}
 
 	std::string winner = ((game.GetTurn() == game.RED_TURN) ? "BLACK" : "RED");

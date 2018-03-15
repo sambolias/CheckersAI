@@ -28,6 +28,11 @@ Board::Board()
     };
 }
 
+Board::Board(const std::vector<char>& board)
+{
+	_board = board;
+}
+
 Board & Board::UpdateKings()
 {
 	for (int i = 0; i < 4; ++i)

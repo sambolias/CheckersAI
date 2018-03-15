@@ -1,10 +1,15 @@
 #include "BoardDisplay.h"
 #include "DistributionTestDisplay.h"
-#include "NetworkEvolverTestDisplay.h"
 #include "NormalDistribution.h"
 #include "UniformDistribution.h"
+#include "LoadedGameDisplay.hpp"
 #include <QDebug>
 #include <QSharedPointer>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QFile>
+using std::vector;
+
 QTextEdit * BoardDisplay::textDisplay;
 
 BoardDisplay::BoardDisplay()
@@ -24,7 +29,7 @@ BoardDisplay::BoardDisplay()
 
 	// load game
 	QAction* loadAction = menuGame->addAction("Load");
-	connect(saveAction, SIGNAL(triggered()), this, SLOT(load()));
+	connect(loadAction, SIGNAL(triggered()), this, SLOT(load()));
 
 	//exit application todo check to save or export your files
 	QAction* quitAction = menuGame->addAction("Quit");
@@ -38,9 +43,7 @@ BoardDisplay::BoardDisplay()
 	// Uniform Distribution
 	QAction* uniformDistributionTestAction = menuTests->addAction("Uniform Distribution Test");
 	connect(uniformDistributionTestAction, SIGNAL(triggered()), this, SLOT(uniformDistribtutionTest()));
-	// Network Evolver
-	QAction* networkEvolverTestAction = menuTests->addAction("Network Evolver Test");
-	connect(networkEvolverTestAction, SIGNAL(triggered()), this, SLOT(networkEvolverTest()));
+	
 
 	QMenuBar* mainMenu = this->menuBar();
 	mainMenu->addMenu(menuGame);
@@ -51,6 +54,8 @@ BoardDisplay::BoardDisplay()
 	textDisplay->setFontPointSize(10);
 	textDisplay->setReadOnly(true);
 	textDisplay->setGeometry((H_BUFFER * 2) + (TILE_SIZE * 8), V_BUFFER + 20, 200, TILE_SIZE * 8);
+	// reset boards
+	resetBoards();
 }
 
 void BoardDisplay::display()
@@ -117,6 +122,48 @@ void BoardDisplay::save()
 
 void BoardDisplay::load()
 {
+	QString filename = QFileDialog::getOpenFileName(this, tr("Game files"), ".txt");
+	if (filename.isEmpty()) return;
+
+	QFile file(filename);
+	if (!file.open(QIODevice::ReadOnly))
+	{
+		QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+		return;
+	}
+	QStringList fileContents;
+	QTextStream in(&file);
+	while (!in.atEnd())
+	{
+		fileContents.push_back(in.readLine());
+	}
+
+	QString winner = fileContents.front();
+	fileContents.pop_front();
+	QString redPlayer = fileContents.front();
+	fileContents.pop_front();
+	QString blackPlayer = fileContents.front();
+	fileContents.pop_front();
+	displayText(winner.toStdString());
+	displayText(redPlayer.toStdString());
+	displayText(blackPlayer.toStdString());
+	_boards.clear();
+	for (const auto & line : fileContents)
+	{
+		vector<char> board;
+		for (const auto & boardPiece : line)
+		{
+			if (boardPiece != ' ')
+			{
+				board.push_back(boardPiece.toLatin1());
+			}
+		}
+		Board b(board);
+		_boards.push_back(b.GetBoardAsMatrix());
+	}
+
+	_currentBoard = _boards.begin();
+	displayPieces(*_currentBoard);
 }
 
 void BoardDisplay::normalDistributionTest()
@@ -141,8 +188,32 @@ void BoardDisplay::uniformDistribtutionTest()
 	distributionTestDisplay->start(distribution, amount, increment);
 }
 
-void BoardDisplay::networkEvolverTest()
+void BoardDisplay::keyPressEvent(QKeyEvent *event)
 {
-	NetworkEvolverTestDisplay *display = new NetworkEvolverTestDisplay(this);
-	display->start();
+	if (_boards.empty())
+		return;
+
+	if (event->key() == Qt::Key_D)
+	{
+		if (_currentBoard < _boards.end() - 1)
+			_currentBoard++;
+	}
+	else if (event->key() == Qt::Key_A)
+	{
+		if (_currentBoard > _boards.begin())
+			_currentBoard--;
+	}
+	displayPieces(*_currentBoard);
+}
+
+void BoardDisplay::addBoard(const std::vector<std::vector<char>> & board)
+{
+	_boards.push_back(board);
+	_currentBoard = _boards.end() - 1;
+}
+
+void BoardDisplay::resetBoards()
+{
+	_boards.clear();
+	_currentBoard = _boards.begin();
 }
