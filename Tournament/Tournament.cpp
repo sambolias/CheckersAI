@@ -45,6 +45,7 @@ void Tournament::Start(int populationSize, int maxMoves,  double winWeight, doub
     startGeneration();
 }
 
+// Plays a round in the tournament
 void Tournament::startGeneration()
 {
     _gameNumber = 0;
@@ -89,11 +90,13 @@ void Tournament::startGeneration()
     }
     
     evolveWinners();
-    // Write networks to file
-    // _generationNumber++
-    // startGeneration();
+    _tournamentFileHandler.WriteGenerationToFiles(_generationNumber++, _players);
+    // cap the amount of generations for now
+    if (_generationNumber < 10)
+        startGeneration();
 }
 
+// Evolves removes worst half of neural networks, and evolves the best half
 void Tournament::evolveWinners()
 {
     sortPlayersByScore();
@@ -111,9 +114,8 @@ void Tournament::evolveWinners()
 
         _players.push_back(childPlayer);
     }
-
-    // print new generation
-    cout << "\nEvolved generation " << _generationNumber << endl;
+    // Print new players
+    cout << endl << "Evolved generation " << _generationNumber << endl;
     cout << "Name / Score / Games Played" << endl;
     for (auto player : _players)
     {
@@ -121,6 +123,7 @@ void Tournament::evolveWinners()
     }
 }
 
+// Sorts players by their score
 void Tournament::sortPlayersByScore()
 {
     sort(_players.begin(), _players.end(), [](const shared_ptr<NeuralNetworkPlayer> & lhs, const shared_ptr<NeuralNetworkPlayer> & rhs)
@@ -134,6 +137,7 @@ void Tournament::sortPlayersByScore()
     });
 }
 
+// Plays a game between 2 neural network players
 void Tournament::playGame(shared_ptr<NeuralNetworkPlayer> redPlayer, shared_ptr<NeuralNetworkPlayer> blackPlayer)
 {
     cout << "Generation " << _generationNumber << " playing game " << _gameNumber << endl;

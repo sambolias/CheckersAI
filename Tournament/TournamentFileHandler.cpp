@@ -1,4 +1,5 @@
 #include "TournamentFileHandler.h"
+#include "NeuralNetworkFileHandler.h"
 #include <string>
 using std::string;
 using std::to_string;
@@ -35,14 +36,15 @@ TournamentFileHandler::TournamentFileHandler()
 bool TournamentFileHandler::makeDirectory(const string & directoryPath)
 {
     // https://stackoverflow.com/questions/9235679/create-a-directory-if-it-doesnt-exist
-    LPCWSTR path = std::wstring(directoryPath.begin(), directoryPath.end()).c_str();
-    if (CreateDirectoryW(path, NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
+    LPCSTR path = directoryPath.c_str();
+    if (CreateDirectory(path, NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
     {
         return true;
     }
     else
     {
-        //cout << "Failed to create directory " << directoryPath << endl;
+        cout << "Failed to create directory " << directoryPath << endl;
+		cout << "Error: " << GetLastError() << endl;
         return false;
     }
 }
@@ -69,5 +71,19 @@ void TournamentFileHandler::WriteGameToFile(int generation, int gameNumber, cons
 			file << '\n';
 		}
 		file.close();
+	}
+}
+
+void TournamentFileHandler::WriteGenerationToFiles(int generation, const vector<shared_ptr<NeuralNetworkPlayer>> & players)
+{
+	string generationPath = _baseGenerationFolderPath + to_string(generation);
+	makeDirectory(generationPath);
+
+	string networkFileName;
+	for (int i = 0; i < players.size(); ++i)
+	{
+		networkFileName = generationPath + '\\' + _baseNetworkFileName + to_string(i) + ".txt";
+		auto network = players[i]->GetNeuralNetork();
+		NeuralNetworkFileHandler::WriteNetworkToFile(networkFileName, network);
 	}
 }
