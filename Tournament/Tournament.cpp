@@ -3,6 +3,7 @@
 #include "Board.hpp"
 #include "NeuralNetworkFileHandler.h"
 #include "TournamentFileHandler.h"
+#include "UniformDistribution.h"
 #include <vector>
 using std::vector;
 #include <memory>
@@ -18,6 +19,8 @@ using std::string;
 using std::to_string;
 #include <fstream>
 using std::ofstream;
+#include <algorithm>
+using std::sort;
 
 // C:\Users\Frank's Laptop\Desktop\Programming\School\CS405-Intro-to-AI\CheckersAI
 void Tournament::Start(int populationSize, int maxMoves,  double winWeight, double lossWeight, double drawWeight, const vector<int> & layers)
@@ -39,33 +42,108 @@ void Tournament::Start(int populationSize, int maxMoves,  double winWeight, doub
         _players[i] = player;
     }
 
-    // Play round robin where each network plays as red against all other networks
-    for (auto redPlayer : _players)
+    startGeneration();
+}
+
+void Tournament::startGeneration()
+{
+    _gameNumber = 0;
+    // set games played to zero for all players
+    for (auto player : _players)
     {
-        for (auto blackPlayer : _players)
+        player->Reset();
+    }
+    
+    UniformDistribution playerChooser(0, _players.size());
+    int blackPlayerIndex;
+    shared_ptr<NeuralNetworkPlayer> redPlayer;
+    shared_ptr<NeuralNetworkPlayer> blackPlayer;
+    // Each network must play 5 games as red against random opponents
+    for (int redPlayerIndex = 0; redPlayerIndex < _players.size(); ++redPlayerIndex)
+    {
+        redPlayer = _players[redPlayerIndex];
+        for (int i = 0; i < 5; ++i)
         {
-            if (redPlayer == blackPlayer)
-                continue;
+            do
+            {
+                blackPlayerIndex = (int)playerChooser.GetDistributionNumber();
+                if (blackPlayerIndex >= _players.size())
+                {
+                    cout << "Black index too large: " << blackPlayerIndex << endl;
+                }
+            }
+            while (blackPlayerIndex == redPlayerIndex || blackPlayerIndex >= _players.size());
             
-            redPlayer->SetColor(Board::RED);
-            blackPlayer->SetColor(Board::BLACK);
+            redPlayer = _players[redPlayerIndex];
+            blackPlayer = _players[blackPlayerIndex];
+
             playGame(redPlayer, blackPlayer);
         }
     }
-
-    cout << endl << "Total Network Scores" << endl;
+    // Print scores from generation
+    cout << endl << "Generation " << _generationNumber << " score" << endl;
+    cout << "Name / Score / Games Played" << endl;
     for (auto player : _players)
     {
-        cout << player->GetName() << ": " << player->GetScore() << endl;
+        cout << player->GetName() << " / " << player->GetScore() << " / " << player->GetGamesPlayed() << endl;
     }
+    
+    evolveWinners();
+    // Write networks to file
+    // _generationNumber++
+    // startGeneration();
+}
+
+void Tournament::evolveWinners()
+{
+    sortPlayersByScore();
+    _players = vector<shared_ptr<NeuralNetworkPlayer>>(_players.begin(), _players.end() - _players.size() / 2);
+    int newPlayersSize = _players.size();
+    for (int playerIndex = 0; playerIndex < newPlayersSize; ++playerIndex)
+    {        
+        string parentName = "NN_" + to_string(playerIndex);
+        string childName = "NN_" + to_string(_players.size());
+
+        auto parentPlayer = _players[playerIndex];
+        auto childNetwork = parentPlayer->GetNeuralNetork()->EvolveNetwork();
+        auto childPlayer = make_shared<NeuralNetworkPlayer>(childNetwork, childName, Board::RED);
+        parentPlayer->SetName(parentName);
+
+        _players.push_back(childPlayer);
+    }
+
+    // print new generation
+    cout << "\nEvolved generation " << _generationNumber << endl;
+    cout << "Name / Score / Games Played" << endl;
+    for (auto player : _players)
+    {
+        cout << player->GetName() << " / " << player->GetScore() << " / " << player->GetGamesPlayed() << endl;
+    }
+}
+
+void Tournament::sortPlayersByScore()
+{
+    sort(_players.begin(), _players.end(), [](const shared_ptr<NeuralNetworkPlayer> & lhs, const shared_ptr<NeuralNetworkPlayer> & rhs)
+    {
+        if (lhs->GetGamesPlayed() == 0)
+            return false;
+        else if (rhs->GetGamesPlayed() == 0)
+            return true;
+
+        return rhs->GetScore()/(double)rhs->GetGamesPlayed() < lhs->GetScore()/(double)lhs->GetGamesPlayed();
+    });
 }
 
 void Tournament::playGame(shared_ptr<NeuralNetworkPlayer> redPlayer, shared_ptr<NeuralNetworkPlayer> blackPlayer)
 {
-    Game game(redPlayer, blackPlayer);
-    int moves = 0;
-    vector<vector<char>> boards;
+    cout << "Generation " << _generationNumber << " playing game " << _gameNumber << endl;
 
+    redPlayer->SetColor(Board::RED);
+    blackPlayer->SetColor(Board::BLACK);
+    Game game(redPlayer, blackPlayer);
+    
+    vector<vector<char>> boards;
+    int moves = 0; 
     while (!game.IsOver() && moves < _maxMoves)
     {
         boards.push_back(game.GetBoard());
@@ -78,11 +156,13 @@ void Tournament::playGame(shared_ptr<NeuralNetworkPlayer> redPlayer, shared_ptr<
     string redPlayerName = redPlayer->GetName();
     string blackPlayerName = blackPlayer->GetName();
     
+    // Draw
     if (moves >= _maxMoves)
     {
         redPlayer->AddScore(_drawWeight);
         blackPlayer->AddScore(_drawWeight);
     }
+    // Winner and loser
     else
     {
         auto winner = (game.GetTurn() == game.BLACK_TURN) ? redPlayer : blackPlayer;
@@ -91,6 +171,8 @@ void Tournament::playGame(shared_ptr<NeuralNetworkPlayer> redPlayer, shared_ptr<
         winner->AddScore(_winWeight);
         loser->AddScore(_lossWeight);
     }
+    redPlayer->IncrementGamesPlayed();
+    blackPlayer->IncrementGamesPlayed();
     // Save game
     _tournamentFileHandler.WriteGameToFile(_generationNumber, _gameNumber, winnerName, redPlayerName, blackPlayerName, boards);
     _gameNumber++;

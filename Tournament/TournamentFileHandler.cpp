@@ -42,7 +42,7 @@ bool TournamentFileHandler::makeDirectory(const string & directoryPath)
     }
     else
     {
-        cout << "Failed to create directory " << directoryPath << endl;
+        //cout << "Failed to create directory " << directoryPath << endl;
         return false;
     }
 }

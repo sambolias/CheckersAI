@@ -1,11 +1,12 @@
 #include "NeuralNetworkPlayer.h"
 using std::shared_ptr;
+using std::string;
 
-NeuralNetworkPlayer::NeuralNetworkPlayer(std::shared_ptr<NeuralNetwork> network, std::string name, char color): ComputerPlayer(color)
+NeuralNetworkPlayer::NeuralNetworkPlayer(shared_ptr<NeuralNetwork> network, string name, char color): ComputerPlayer(color)
 {
 	_neuralNetwork = network;
-	_score = 0;
-	_name = name;
+	SetName(name);
+	Reset();
 }
 
 double NeuralNetworkPlayer::getHeuristic(Board& board)
@@ -19,14 +20,29 @@ shared_ptr<NeuralNetwork> NeuralNetworkPlayer::GetNeuralNetork()
 	return _neuralNetwork;
 }
 
-const std::string & NeuralNetworkPlayer::GetName()
+const string & NeuralNetworkPlayer::GetName()
 {
 	return _name;
+}
+
+double NeuralNetworkPlayer::GetScore() const
+{
+	return _score;
 }
 
 double NeuralNetworkPlayer::GetScore()
 {
 	return _score;
+}
+
+int NeuralNetworkPlayer::GetGamesPlayed() const
+{
+	return _gamesPlayed;
+}
+
+int NeuralNetworkPlayer::GetGamesPlayed()
+{
+	return _gamesPlayed;
 }
 
 void NeuralNetworkPlayer::AddScore(double value)
@@ -37,4 +53,20 @@ void NeuralNetworkPlayer::AddScore(double value)
 void NeuralNetworkPlayer::SetColor(char color)
 {
 	_color = color;
+}
+
+void NeuralNetworkPlayer::IncrementGamesPlayed()
+{
+	_gamesPlayed++;
+}
+
+void NeuralNetworkPlayer::Reset()
+{
+	_score = 0;
+	_gamesPlayed = 0;
+}
+
+void NeuralNetworkPlayer::SetName(string name)
+{
+	_name = name;
 }
