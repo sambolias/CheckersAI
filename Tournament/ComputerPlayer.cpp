@@ -8,6 +8,11 @@ using std::cout;
 #include <limits>
 using std::numeric_limits;
 
+ComputerPlayer::ComputerPlayer(char color): Player(color)
+{
+	_infinity = std::numeric_limits<double>::infinity();
+}
+
 Board& ComputerPlayer::TakeTurn(Board& board, vector<shared_ptr<Movement>>& moves)
 {
 	if (moves.size())
@@ -27,11 +32,11 @@ Board& ComputerPlayer::TakeTurn(Board& board, vector<shared_ptr<Movement>>& move
 shared_ptr<Movement> ComputerPlayer::minimax(Board board, vector<shared_ptr<Movement>>& moves, int depth)
 {
 	shared_ptr<Movement> bestMove = 0;
-	double bestValue = -numeric_limits<double>::infinity();//-INFINITY;
+	double bestValue = -_infinity;//-INFINITY;
 	for (auto move : moves)
 	{
 		Board newBoard = board; // create new board because move->ExecuteMovement(board) modifies board
-		double val = minimax(0, move->ExecuteMovement(newBoard).UpdateKings(), false, depth);
+		double val = minimax(0, move->ExecuteMovement(newBoard).UpdateKings(), -_infinity, _infinity, false, depth);
 		if (val > bestValue)
 		{
 			bestMove = move;
@@ -43,7 +48,7 @@ shared_ptr<Movement> ComputerPlayer::minimax(Board board, vector<shared_ptr<Move
 	return bestMove;
 }
 
-double ComputerPlayer::minimax(double currentValue, Board & board, bool maximize, int depth)
+double ComputerPlayer::minimax(double currentValue, Board & board, double alpha, double beta, bool maximize, int depth)
 {
 	// Add current board score to total
 	currentValue += getHeuristic(board);
@@ -58,13 +63,24 @@ double ComputerPlayer::minimax(double currentValue, Board & board, bool maximize
 	{
 		return currentValue;
 	}
-	// Evaluate moves for best move
-	double best = (maximize) ? -numeric_limits<double>::infinity() : numeric_limits<double>::infinity(); // set best to worst possible value
+	double best = (maximize) ? -_infinity : _infinity; // set best to worst possible value
 	for (shared_ptr<Movement> move : moves)
 	{
 		Board newBoard = board; // create new board because move->ExecuteMovement(board) modifies board
-		double val = minimax(currentValue, move->ExecuteMovement(newBoard).UpdateKings(), !maximize, depth - 1);
+		double val = minimax(currentValue, move->ExecuteMovement(newBoard).UpdateKings(), alpha, beta, !maximize, depth - 1);
 		best = (maximize) ? std::max(val, best) : std::min(val, best);
+		if (maximize)
+		{
+			alpha = std::max(alpha, val);
+		}
+		else
+		{
+			beta = std::min(beta, val);
+		}
+		if (beta <= alpha)
+		{
+			break;
+		}
 	}
 	return best;
 }
