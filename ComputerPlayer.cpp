@@ -12,7 +12,7 @@ Board& ComputerPlayer::TakeTurn(Board& board, vector<shared_ptr<Movement>>& move
 {
 	if (moves.size())
 	{
-		auto move = minimax(board, moves, 6);
+		auto move = minimax(board, moves, 3);
 		move->ToString();
 		board = move->ExecuteMovement(board);
 		return board.UpdateKings();

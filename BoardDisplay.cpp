@@ -3,6 +3,10 @@
 #include "NormalDistribution.h"
 #include "UniformDistribution.h"
 #include "LoadedGameDisplay.hpp"
+#include "HumanPlayer.h"
+#include "ComputerPlayer.h"
+#include "NeuralNetworkPlayer.h"
+#include "NeuralNetworkFileHandler.h"
 #include <QDebug>
 #include <QSharedPointer>
 #include <QFileDialog>
@@ -12,8 +16,12 @@ using std::vector;
 
 QTextEdit * BoardDisplay::textDisplay;
 
+enum _playerType { Human, Heuristic, NeuralNetwork };
+
 BoardDisplay::BoardDisplay()
 {
+	_blackPlayer = std::make_shared<HumanPlayer>(Board::BLACK);
+	_redPlayer = std::make_shared<HumanPlayer>(Board::RED);
 	manager = new GameManager(this);
 	widget = new QWidget(this);
 	this->setCentralWidget(widget);
@@ -35,6 +43,10 @@ BoardDisplay::BoardDisplay()
 	QAction* quitAction = menuGame->addAction("Quit");
 	connect(quitAction, SIGNAL(triggered()), this, SLOT(quit()));
 
+	// Player Menus
+	QMenu* menuRedPlayer = createPlayerMenu(_redPlayer, "Red Player");
+	QMenu* menuBlackPlayer = createPlayerMenu(_blackPlayer, "Black Player");
+
 	// Tests
 	QMenu* menuTests = new QMenu("Tests");
 	// Normal Distribution
@@ -47,6 +59,8 @@ BoardDisplay::BoardDisplay()
 
 	QMenuBar* mainMenu = this->menuBar();
 	mainMenu->addMenu(menuGame);
+	mainMenu->addMenu(menuRedPlayer);
+	mainMenu->addMenu(menuBlackPlayer);
 	mainMenu->addMenu(menuTests);
 
 	// text display
@@ -107,7 +121,7 @@ void BoardDisplay::displayText(std::string text)
 void BoardDisplay::start()
 {
 	displayText("New game started");
-	manager->startNewGame();
+	manager->startNewGame(_redPlayer, _blackPlayer);
 }
 
 void BoardDisplay::quit()
@@ -118,6 +132,7 @@ void BoardDisplay::quit()
 
 void BoardDisplay::save()
 {
+
 }
 
 void BoardDisplay::load()
@@ -216,4 +231,59 @@ void BoardDisplay::resetBoards()
 {
 	_boards.clear();
 	_currentBoard = _boards.begin();
+}
+
+QMenu * BoardDisplay::createPlayerMenu(std::shared_ptr<Player> player, std::string menuName)
+{
+	QMenu* playerMenu = new QMenu(QString::fromStdString(menuName));
+	QAction* humanPlayerAction = playerMenu->addAction("Human");
+	QAction* heuristicPlayerAction = playerMenu->addAction("Computer: Heuristic");
+	QAction* neuralNetworkPlayerAction = playerMenu->addAction("Computer: Nerual Network");
+	if (player == _blackPlayer)
+	{
+		connect(humanPlayerAction, SIGNAL(triggered()), this, SLOT(setBlackHumanPlayer()));
+		connect(heuristicPlayerAction, SIGNAL(triggered()), this, SLOT(setBlackHeuristicPlayer()));
+		connect(neuralNetworkPlayerAction, SIGNAL(triggered()), this, SLOT(setBlackNeuralNetworkPlayer()));
+	}
+	else
+	{
+		connect(humanPlayerAction, SIGNAL(triggered()), this, SLOT(setRedHumanPlayer()));
+		connect(heuristicPlayerAction, SIGNAL(triggered()), this, SLOT(setRedHeuristicPlayer()));
+		connect(neuralNetworkPlayerAction, SIGNAL(triggered()), this, SLOT(setRedNeuralNetworkPlayer()));
+	}
+	return playerMenu;
+}
+
+void BoardDisplay::setRedHumanPlayer()
+{
+	_redPlayer = std::make_shared<HumanPlayer>(Board::RED);
+}
+
+void  BoardDisplay::setRedHeuristicPlayer()
+{
+	_redPlayer = std::make_shared<ComputerPlayer>(Board::RED);
+}
+
+void  BoardDisplay::setBlackHumanPlayer()
+{
+	_blackPlayer = std::make_shared<HumanPlayer>(Board::BLACK);
+}
+
+void  BoardDisplay::setBlackHeuristicPlayer()
+{
+	_blackPlayer = std::make_shared<ComputerPlayer>(Board::BLACK);
+}
+
+void BoardDisplay::setRedNeuralNetworkPlayer()
+{
+	QString filename = QFileDialog::getOpenFileName(this, tr("Nerual Network Files"), ".txt");
+	auto nerualNetwork = NeuralNetworkFileHandler::ReadNetworkFromQFile(filename);
+	_redPlayer = std::make_shared<NeuralNetworkPlayer>(nerualNetwork, Board::RED);
+}
+
+void BoardDisplay::setBlackNeuralNetworkPlayer()
+{
+	QString filename = QFileDialog::getOpenFileName(this, tr("Nerual Network Files"), ".txt");
+	auto nerualNetwork = NeuralNetworkFileHandler::ReadNetworkFromQFile(filename);
+	_blackPlayer = std::make_shared<NeuralNetworkPlayer>(nerualNetwork, Board::BLACK);
 }

@@ -3,6 +3,7 @@
 
 #include "TileDisplay.h"
 #include "GameManager.h"
+#include "Player.hpp"
 #include "Board.hpp"
 #include <QWidget>
 #include <QAction>
@@ -16,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 
 class BoardDisplay : public QMainWindow
 {
@@ -27,6 +29,10 @@ private:
 	const int TILE_SIZE = 64;
 	std::vector<std::vector<std::vector<char>>> _boards;
 	std::vector<std::vector<std::vector<char>>>::iterator _currentBoard;
+	std::shared_ptr<Player> _redPlayer;
+	std::shared_ptr<Player> _blackPlayer;
+	enum _playerType;
+	QMenu * createPlayerMenu(std::shared_ptr<Player> player, std::string menuName);
 
 protected:
 	void keyPressEvent(QKeyEvent * event);
@@ -38,6 +44,12 @@ public slots:
 	void quit();
 	void normalDistributionTest();
 	void uniformDistribtutionTest();
+	void setRedHumanPlayer();
+	void setRedHeuristicPlayer();
+	void setRedNeuralNetworkPlayer();
+	void setBlackHumanPlayer();
+	void setBlackHeuristicPlayer();
+	void setBlackNeuralNetworkPlayer();
 
 public:
 	TileDisplay * tiles[8][8];
