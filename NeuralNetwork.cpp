@@ -17,6 +17,8 @@ using std::pow;
 #include <fstream>
 using std::ofstream;
 using std::ifstream;
+#include <sstream>
+using std::stringstream;
 #include <exception>
 using std::exception;
 #include <utility>
@@ -24,6 +26,8 @@ using std::exception;
 #include "NormalDistribution.h"
 #include "UniformDistribution.h"
 #include "NeuralNetwork.hpp"
+
+#include <QDebug>
 
 //set the sigmoid function to use
 // 0 uses external lib, 1 uses weird abs value simd trick
@@ -66,9 +70,8 @@ NeuralNetwork::NeuralNetwork(const std::vector<int> & layers)
 }
 
 //augFlag mutates loaded board
-NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag)
+NeuralNetwork::NeuralNetwork(vector<float> & raw, bool doesEvolve)
 {
-  vector<float> raw = parseFile(fname);
   if(!raw.empty())
   {
     //set other variables
@@ -86,14 +89,14 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag)
     resetNeurons();
 
     //mutate as offspring of save file
-    if(augFlag)
+    if(doesEvolve)
     {
       //random number generators
       UniformDistribution U(-0.1, 0.1);
       NormalDistribution N(0, 1);
       //mutation constants
       int n = raw.size() - idx + 1; //n is weight count
-      float tau = 1. / sqrt(2 * sqrt((float)n));
+      float tau = 1. / sqrt(2. * sqrt((float)n));
       //mutate values
       float kPrime = kingValue + U.GetDistributionNumber();
       if(kPrime <= 3.0 && kPrime >= 1.0)
@@ -103,8 +106,18 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag)
       pieceCountWeight = pieceCountWeight + sigma * N.GetDistributionNumber();
 
       //mutate weights
-      for(int i = idx; i < raw.size(); i++)
-        raw[i] = raw[i] + sigma * N.GetDistributionNumber();
+	  for (int i = idx; i < raw.size(); i++)
+	  {
+		  float sigmaTimesN = sigma * N.GetDistributionNumber();
+		  float newValue = raw[i] + sigmaTimesN;
+		  if (newValue < -10)
+		  {
+			  qDebug() << "New weight: " << newValue;
+			  qDebug() << "Old weight: " << raw[i];
+			  qDebug() << "Sigma * N: " << sigmaTimesN;
+		  }
+		  raw[i] = newValue;
+	  }
     }
     //set weights
     float * f = &raw[idx];
@@ -124,59 +137,6 @@ NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag)
   {
     //TODO make some bad flag for network
   }
-}
-bool NeuralNetwork::saveNetwork(std::string fname)
-{
-  //write to file #of layers / Layers / kingValue / sigma / pieceCountWeight / weights
-  ofstream ofs(fname);
-  try
-  {
-    ofs<<_layers.size()<<" ";
-    for(auto l : _layers)
-      ofs<<l<<" ";
-    ofs<<kingValue<<" ";
-    ofs<<sigma<<" ";
-    ofs<<pieceCountWeight<<" ";
-    for(int layer = 0; layer < _layers.size()-1; layer++)
-      for(int idx = 0; idx < _weights[layer].size(); idx++)
-      {
-        float f[8];
-        _mm256_store_ps(&f[0], _weights[layer][idx]);
-        for(int i = 0; i < 8; i++)
-          ofs<<f[i]<<" ";
-      }
-  }
-  catch(exception & e)
-  {
-    cout<<e.what();
-    ofs.close();
-    return false;
-  }
-  ofs.close();
-  return true;
-}
-vector<float> NeuralNetwork::parseFile(std::string fname)
-{
-  //parse directly into vector - same format as saveNetwork
-  vector<float> values;
-  ifstream ifs(fname);
-  try
-  {
-    while(!ifs.eof())
-    {
-      float temp;
-      ifs >> temp;
-      values.push_back(temp);
-    }
-  }
-  catch(exception & e)
-  {
-    cout<<e.what();
-    ifs.close();
-    return vector<float>(); //return empty vector if throws
-  }
-  ifs.close();
-  return values;
 }
 
 int NeuralNetwork::getNeuronCount()
@@ -334,6 +294,64 @@ float NeuralNetwork::GetBoardEvaluation(bool isRedPlayer, const vector<char> & b
   }
 
   return getLayerEvaluation();
+}
+
+string NeuralNetwork::ToString()
+{
+	//string format #of layers / Layers / kingValue / sigma / pieceCountWeight / weights
+	stringstream ss;
+	ss.clear();
+	try
+	{
+		ss << _layers.size() << " ";
+		for (auto l : _layers)
+			ss << l << " ";
+		ss << kingValue << " ";
+		ss << sigma << " ";
+		ss << pieceCountWeight << " ";
+		for (int layer = 0; layer < _layers.size() - 1; layer++)
+			for (int idx = 0; idx < _weights[layer].size(); idx++)
+			{
+				float f[8];
+				_mm256_store_ps(&f[0], _weights[layer][idx]);
+				for (int i = 0; i < 8; i++)
+					ss << f[i] << " ";
+			}
+	}
+	catch (exception & e)
+	{
+		cout << e.what();
+		return "ERROR";
+	}
+	return ss.str();
+}
+
+std::vector<float> NeuralNetwork::GetWeights()
+{
+	std::vector<float> weights;
+	for (int layer = 0; layer < _layers.size() - 1; layer++)
+	{
+		for (int idx = 0; idx < _weights[layer].size(); idx++)
+		{
+			float f[8];
+			_mm256_store_ps(&f[0], _weights[layer][idx]);
+			for (int i = 0; i < 8; i++)
+			{
+				weights.push_back(f[i]);
+			}
+		}
+	}
+	return weights;
+}
+
+float NeuralNetwork::GetSigma()
+{
+	return sigma;
+}
+
+float NeuralNetwork::GetKingValue()
+{
+	return kingValue;
 }
 
 // This evaluation requires weights to be stored in a specific way

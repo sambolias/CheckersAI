@@ -41,13 +41,18 @@ int main()
                     };
 
   NeuralNetwork test({32, 40, 16, 1});
-  test.saveNetwork("net1");
+  test.saveNetwork("net1.txt");
 
+<<<<<<< HEAD
   NeuralNetwork test2({32, 112, 80, 16, 1});
   test2.saveNetwork("net2");
+=======
+  NeuralNetwork test2({32, 112, 80, 64, 16, 1});
+  test2.saveNetwork("net2.txt");
+>>>>>>> b1df6bbb163be59808b08c980130ecc8e1b83398
 
-  NeuralNetwork test3("net2", true);
-  test3.saveNetwork("net3");
+  NeuralNetwork test3("net2.txt", true);
+  test3.saveNetwork("net3.txt");
 
   cout<<"Test board has 3x more red pieces than black, random weights [-.2,.2]\n";
   cout<<"4 Layer Network output\n";

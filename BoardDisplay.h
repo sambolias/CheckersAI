@@ -31,6 +31,7 @@ public slots:
 	void quit();
 	void normalDistributionTest();
 	void uniformDistribtutionTest();
+	void networkEvolverTest();
 
 public:
 	TileDisplay * tiles[8][8];
