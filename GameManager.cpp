@@ -17,12 +17,13 @@ std::vector<std::vector<char>> generateBoard()
 }
 
 
-void GameManager::startNewGame()
+void GameManager::startNewGame(std::shared_ptr<Player> redPlayer, std::shared_ptr<Player> blackPlayer)
 {
-	std::shared_ptr<Player> playerOne = std::make_shared<HumanPlayer>(Board::RED);
-	std::shared_ptr<Player> playerTwo = std::make_shared<ComputerPlayer>(Board::BLACK);
+	std::shared_ptr<Player> playerOne = redPlayer;
+	std::shared_ptr<Player> playerTwo = blackPlayer;
 	Game game = Game(playerOne, playerTwo);
 
+	display->resetBoards();
 	display->displayPieces(game.GetBoard());
 	playing = true;
 
@@ -48,10 +49,10 @@ void GameManager::startNewGame()
 			}
 		}
 		game.TakeNextTurn();
+		display->addBoard(game.GetBoard());
+		display->displayPieces(game.GetBoard());
 		if (game.IsOver())
 			break;
-
-		display->displayPieces(game.GetBoard());
 	}
 
 	std::string winner = ((game.GetTurn() == game.RED_TURN) ? "BLACK" : "RED");

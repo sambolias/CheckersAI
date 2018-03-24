@@ -1,14 +1,27 @@
 #include "BoardDisplay.h"
 #include "DistributionTestDisplay.h"
-#include "NetworkEvolverTestDisplay.h"
 #include "NormalDistribution.h"
 #include "UniformDistribution.h"
+#include "LoadedGameDisplay.hpp"
+#include "HumanPlayer.h"
+#include "ComputerPlayer.h"
+#include "NeuralNetworkPlayer.h"
+#include "NeuralNetworkFileHandler.h"
 #include <QDebug>
 #include <QSharedPointer>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QFile>
+using std::vector;
+
 QTextEdit * BoardDisplay::textDisplay;
+
+enum _playerType { Human, Heuristic, NeuralNetwork };
 
 BoardDisplay::BoardDisplay()
 {
+	_blackPlayer = std::make_shared<HumanPlayer>(Board::BLACK);
+	_redPlayer = std::make_shared<HumanPlayer>(Board::RED);
 	manager = new GameManager(this);
 	widget = new QWidget(this);
 	this->setCentralWidget(widget);
@@ -24,11 +37,15 @@ BoardDisplay::BoardDisplay()
 
 	// load game
 	QAction* loadAction = menuGame->addAction("Load");
-	connect(saveAction, SIGNAL(triggered()), this, SLOT(load()));
+	connect(loadAction, SIGNAL(triggered()), this, SLOT(load()));
 
 	//exit application todo check to save or export your files
 	QAction* quitAction = menuGame->addAction("Quit");
 	connect(quitAction, SIGNAL(triggered()), this, SLOT(quit()));
+
+	// Player Menus
+	QMenu* menuRedPlayer = createPlayerMenu(_redPlayer, "Red Player");
+	QMenu* menuBlackPlayer = createPlayerMenu(_blackPlayer, "Black Player");
 
 	// Tests
 	QMenu* menuTests = new QMenu("Tests");
@@ -38,12 +55,12 @@ BoardDisplay::BoardDisplay()
 	// Uniform Distribution
 	QAction* uniformDistributionTestAction = menuTests->addAction("Uniform Distribution Test");
 	connect(uniformDistributionTestAction, SIGNAL(triggered()), this, SLOT(uniformDistribtutionTest()));
-	// Network Evolver
-	QAction* networkEvolverTestAction = menuTests->addAction("Network Evolver Test");
-	connect(networkEvolverTestAction, SIGNAL(triggered()), this, SLOT(networkEvolverTest()));
+	
 
 	QMenuBar* mainMenu = this->menuBar();
 	mainMenu->addMenu(menuGame);
+	mainMenu->addMenu(menuRedPlayer);
+	mainMenu->addMenu(menuBlackPlayer);
 	mainMenu->addMenu(menuTests);
 
 	// text display
@@ -51,6 +68,8 @@ BoardDisplay::BoardDisplay()
 	textDisplay->setFontPointSize(10);
 	textDisplay->setReadOnly(true);
 	textDisplay->setGeometry((H_BUFFER * 2) + (TILE_SIZE * 8), V_BUFFER + 20, 200, TILE_SIZE * 8);
+	// reset boards
+	resetBoards();
 }
 
 void BoardDisplay::display()
@@ -102,7 +121,7 @@ void BoardDisplay::displayText(std::string text)
 void BoardDisplay::start()
 {
 	displayText("New game started");
-	manager->startNewGame();
+	manager->startNewGame(_redPlayer, _blackPlayer);
 }
 
 void BoardDisplay::quit()
@@ -113,10 +132,53 @@ void BoardDisplay::quit()
 
 void BoardDisplay::save()
 {
+
 }
 
 void BoardDisplay::load()
 {
+	QString filename = QFileDialog::getOpenFileName(this, tr("Game files"), ".txt");
+	if (filename.isEmpty()) return;
+
+	QFile file(filename);
+	if (!file.open(QIODevice::ReadOnly))
+	{
+		QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+		return;
+	}
+	QStringList fileContents;
+	QTextStream in(&file);
+	while (!in.atEnd())
+	{
+		fileContents.push_back(in.readLine());
+	}
+
+	QString winner = fileContents.front();
+	fileContents.pop_front();
+	QString redPlayer = fileContents.front();
+	fileContents.pop_front();
+	QString blackPlayer = fileContents.front();
+	fileContents.pop_front();
+	displayText(winner.toStdString());
+	displayText(redPlayer.toStdString());
+	displayText(blackPlayer.toStdString());
+	_boards.clear();
+	for (const auto & line : fileContents)
+	{
+		vector<char> board;
+		for (const auto & boardPiece : line)
+		{
+			if (boardPiece != ' ')
+			{
+				board.push_back(boardPiece.toLatin1());
+			}
+		}
+		Board b(board);
+		_boards.push_back(b.GetBoardAsMatrix());
+	}
+
+	_currentBoard = _boards.begin();
+	displayPieces(*_currentBoard);
 }
 
 void BoardDisplay::normalDistributionTest()
@@ -141,8 +203,87 @@ void BoardDisplay::uniformDistribtutionTest()
 	distributionTestDisplay->start(distribution, amount, increment);
 }
 
-void BoardDisplay::networkEvolverTest()
+void BoardDisplay::keyPressEvent(QKeyEvent *event)
 {
-	NetworkEvolverTestDisplay *display = new NetworkEvolverTestDisplay(this);
-	display->start();
+	if (_boards.empty())
+		return;
+
+	if (event->key() == Qt::Key_D)
+	{
+		if (_currentBoard < _boards.end() - 1)
+			_currentBoard++;
+	}
+	else if (event->key() == Qt::Key_A)
+	{
+		if (_currentBoard > _boards.begin())
+			_currentBoard--;
+	}
+	displayPieces(*_currentBoard);
+}
+
+void BoardDisplay::addBoard(const std::vector<std::vector<char>> & board)
+{
+	_boards.push_back(board);
+	_currentBoard = _boards.end() - 1;
+}
+
+void BoardDisplay::resetBoards()
+{
+	_boards.clear();
+	_currentBoard = _boards.begin();
+}
+
+QMenu * BoardDisplay::createPlayerMenu(std::shared_ptr<Player> player, std::string menuName)
+{
+	QMenu* playerMenu = new QMenu(QString::fromStdString(menuName));
+	QAction* humanPlayerAction = playerMenu->addAction("Human");
+	QAction* heuristicPlayerAction = playerMenu->addAction("Computer: Heuristic");
+	QAction* neuralNetworkPlayerAction = playerMenu->addAction("Computer: Nerual Network");
+	if (player == _blackPlayer)
+	{
+		connect(humanPlayerAction, SIGNAL(triggered()), this, SLOT(setBlackHumanPlayer()));
+		connect(heuristicPlayerAction, SIGNAL(triggered()), this, SLOT(setBlackHeuristicPlayer()));
+		connect(neuralNetworkPlayerAction, SIGNAL(triggered()), this, SLOT(setBlackNeuralNetworkPlayer()));
+	}
+	else
+	{
+		connect(humanPlayerAction, SIGNAL(triggered()), this, SLOT(setRedHumanPlayer()));
+		connect(heuristicPlayerAction, SIGNAL(triggered()), this, SLOT(setRedHeuristicPlayer()));
+		connect(neuralNetworkPlayerAction, SIGNAL(triggered()), this, SLOT(setRedNeuralNetworkPlayer()));
+	}
+	return playerMenu;
+}
+
+void BoardDisplay::setRedHumanPlayer()
+{
+	_redPlayer = std::make_shared<HumanPlayer>(Board::RED);
+}
+
+void  BoardDisplay::setRedHeuristicPlayer()
+{
+	_redPlayer = std::make_shared<ComputerPlayer>(Board::RED);
+}
+
+void  BoardDisplay::setBlackHumanPlayer()
+{
+	_blackPlayer = std::make_shared<HumanPlayer>(Board::BLACK);
+}
+
+void  BoardDisplay::setBlackHeuristicPlayer()
+{
+	_blackPlayer = std::make_shared<ComputerPlayer>(Board::BLACK);
+}
+
+void BoardDisplay::setRedNeuralNetworkPlayer()
+{
+	QString filename = QFileDialog::getOpenFileName(this, tr("Nerual Network Files"), ".txt");
+	auto nerualNetwork = NeuralNetworkFileHandler::ReadNetworkFromQFile(filename);
+	_redPlayer = std::make_shared<NeuralNetworkPlayer>(nerualNetwork, Board::RED);
+}
+
+void BoardDisplay::setBlackNeuralNetworkPlayer()
+{
+	QString filename = QFileDialog::getOpenFileName(this, tr("Nerual Network Files"), ".txt");
+	auto nerualNetwork = NeuralNetworkFileHandler::ReadNetworkFromQFile(filename);
+	_blackPlayer = std::make_shared<NeuralNetworkPlayer>(nerualNetwork, Board::BLACK);
 }

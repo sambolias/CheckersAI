@@ -1,6 +1,5 @@
 #include "NeuralNetworkFileHandler.h"
-#include <QDebug>
-#include <QFile>
+// #include <QDebug>
 #include <string>
 using std::string;
 #include <vector>
@@ -17,34 +16,52 @@ using std::ifstream;
 using std::cout;
 #include <exception>
 using std::exception;
+// void NeuralNetworkFileHandler::WriteNetworkToFile(QString filename, QSharedPointer<NeuralNetwork> neuralNetwork)
+// {
+// 	string inputString = neuralNetwork->ToString();
+// 	QFile file(filename);
+// 	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+// 	{
+// 		qDebug() << "WriteNetworkToFile() => File " << filename << " could not be opened.";
+// 		return;
+// 	}
 
- vector<double> NeuralNetworkFileHandler::ReadRawNetworkFromQFile(QString filename)
- {
- 	QFile file(filename);
- 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
- 	{
- 		qDebug() << "ReadRawNetworkFromFile() => File " << filename << " could not be opened.";
- 		return vector<double>(1, -1.0);
- 	}
+// 	file.write(QByteArray::fromStdString(inputString));
+// 	file.close();
+// }
 
- 	vector<double> rawNetworkValues;
- 	while (!file.atEnd())
- 	{
- 		QByteArray fileInput = file.readAll();
- 		QByteArrayList values = fileInput.split(' ');
- 		for (const auto & value : values)
- 		{
- 			rawNetworkValues.push_back(value.toDouble());
- 		}
- 	}
- 	file.close();
- 	return rawNetworkValues;
- }
+// vector<float> NeuralNetworkFileHandler::ReadRawNetworkFromFile(QString filename)
+// {
+// 	QFile file(filename);
+// 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+// 	{
+// 		qDebug() << "ReadRawNetworkFromFile() => File " << filename << " could not be opened.";
+// 		return vector<float>(1, -1.0f);
+// 	}
 
- shared_ptr<NeuralNetwork> NeuralNetworkFileHandler::ReadNetworkFromQFile(QString filename)
- {
- 	return MakeNetworkFromRawData(ReadRawNetworkFromQFile(filename));
- }
+// 	vector<float> rawNetworkValues;
+// 	while (!file.atEnd())
+// 	{
+// 		QByteArray fileInput = file.readAll();
+// 		QByteArrayList values = fileInput.split(' ');
+// 		for (const auto & value : values)
+// 		{
+// 			rawNetworkValues.push_back(value.toFloat());
+// 		}
+// 	}
+// 	file.close();
+// 	return rawNetworkValues;
+// }
+
+// QSharedPointer<NeuralNetwork> NeuralNetworkFileHandler::EvolveNetworkFromFile(QString filename)
+// {
+// 	return QSharedPointer<NeuralNetwork>::create(ReadRawNetworkFromFile(filename), true);
+// }
+
+// QSharedPointer<NeuralNetwork> NeuralNetworkFileHandler::ReadNetworkFromFile(QString filename)
+// {
+// 	return QSharedPointer<NeuralNetwork>::create(ReadRawNetworkFromFile(filename));
+// }
 
 void NeuralNetworkFileHandler::WriteNetworkToFile(string filename, shared_ptr<NeuralNetwork> neuralNetwork)
 {

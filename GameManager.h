@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <utility>
+#include <memory>
 #include <QApplication>
 #include "HumanPlayer.h"
 
@@ -23,7 +24,7 @@ public:
 	BoardDisplay* display;
 
 	GameManager(BoardDisplay* display_) : display(display_), playing(false) {}
-	void startNewGame();
+	void startNewGame(std::shared_ptr<Player> redPlayer, std::shared_ptr<Player> blackPlayer);
 	void onTileClicked(int x, int y);
 };
 

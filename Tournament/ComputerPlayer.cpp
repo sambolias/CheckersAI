@@ -1,12 +1,17 @@
 #include "ComputerPlayer.h"
-#include <QDebug>
+//#include <QDebug>
+#include <algorithm>
 using std::vector;
 using std::shared_ptr;
 using std::make_shared;
 using std::cout;
+#include <limits>
+using std::numeric_limits;
 
-#include <chrono>
-
+ComputerPlayer::ComputerPlayer(char color): Player(color)
+{
+	_infinity = std::numeric_limits<double>::infinity();
+}
 
 Board& ComputerPlayer::TakeTurn(Board& board, vector<shared_ptr<Movement>>& moves)
 {
@@ -19,26 +24,27 @@ Board& ComputerPlayer::TakeTurn(Board& board, vector<shared_ptr<Movement>>& move
 	}
 	else
 	{
-		qDebug() << "There are no moves for " + _color;
+		//qDebug() << "There are no moves for " + _color;
 		return board;
 	}
 }
+
 shared_ptr<Movement> ComputerPlayer::minimax(Board board, vector<shared_ptr<Movement>>& moves, int depth)
 {
 	shared_ptr<Movement> bestMove = 0;
-	double bestValue = -INFINITY;
+	double bestValue = -_infinity;//-INFINITY;
 	for (auto move : moves)
 	{
 		Board newBoard = board; // create new board because move->ExecuteMovement(board) modifies board
-		double val = minimax(0, move->ExecuteMovement(newBoard).UpdateKings(), -INFINITY, INFINITY, false, depth);
+		double val = minimax(0, move->ExecuteMovement(newBoard).UpdateKings(), -_infinity, _infinity, false, depth);
 		if (val > bestValue)
 		{
 			bestMove = move;
 			bestValue = val;
 		}
-		qDebug() << "Move " << move->ToString().c_str() << " with weight " << val;
+		//qDebug() << "Move " << move->ToString().c_str() << " with weight " << val;
 	}
-	qDebug() << "Chose move " << bestMove->ToString().c_str() << " with weight " << bestValue << '\n';
+	//qDebug() << "Chose move " << bestMove->ToString().c_str() << " with weight " << bestValue << '\n';
 	return bestMove;
 }
 
@@ -57,7 +63,7 @@ double ComputerPlayer::minimax(double currentValue, Board & board, double alpha,
 	{
 		return currentValue;
 	}
-	double best = (maximize) ? -INFINITY : INFINITY; // set best to worst possible value
+	double best = (maximize) ? -_infinity : _infinity; // set best to worst possible value
 	for (shared_ptr<Movement> move : moves)
 	{
 		Board newBoard = board; // create new board because move->ExecuteMovement(board) modifies board
