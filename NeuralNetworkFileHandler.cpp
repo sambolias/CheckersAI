@@ -74,9 +74,9 @@ shared_ptr<NeuralNetwork> NeuralNetworkFileHandler::ReadNetworkFromFile(string f
 shared_ptr<NeuralNetwork> NeuralNetworkFileHandler::MakeNetworkFromRawData(const vector<double> & rawData)
 {
 	vector<int> layers;
-	vector<double> weights;
-	vector<double> weightDeviations;
-	double kingValue;
+	vector<float> weights;
+	vector<float> weightDeviations;
+	float kingValue;
 	int totalWeights;
  	size_t dataIndex = 0;
 

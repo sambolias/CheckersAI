@@ -15,6 +15,8 @@ private:
 	int _gamesPlayed;
 public:
 	NeuralNetworkPlayer(std::shared_ptr<NeuralNetwork> network, std::string name, char color);
+	std::shared_ptr<NeuralNetworkPlayer> clone();
+	void saveNetwork();
 	double getHeuristic(Board & board) override;
 	std::shared_ptr<NeuralNetwork> GetNeuralNetork();
 	const std::string & GetName();

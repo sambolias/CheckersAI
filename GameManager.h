@@ -10,7 +10,7 @@
 #include <QApplication>
 #include "HumanPlayer.h"
 
-extern class BoardDisplay;
+class BoardDisplay;
 
 class GameManager
 {

@@ -1,22 +1,23 @@
 #include "BoardDisplay.h"
-#include "DistributionTestDisplay.h"
+//#include "DistributionTestDisplay.h"
 #include "NormalDistribution.h"
 #include "UniformDistribution.h"
 #include "LoadedGameDisplay.hpp"
 #include "HumanPlayer.h"
 #include "ComputerPlayer.h"
-#include "NeuralNetworkPlayer.h"
+#include "Tournament/NeuralNetworkPlayer.h"
 #include "NeuralNetworkFileHandler.h"
 #include <QDebug>
 #include <QSharedPointer>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QFile>
+#include <QtWidgets>
 using std::vector;
 
 QTextEdit * BoardDisplay::textDisplay;
 
-enum _playerType { Human, Heuristic, NeuralNetwork };
+enum _playerType { Human, Heuristic, Neural };
 
 BoardDisplay::BoardDisplay()
 {
@@ -188,8 +189,8 @@ void BoardDisplay::normalDistributionTest()
 	double increment = 0.25;
 	int amount = 1700;
 	QSharedPointer<StatisticalDistribution> distribution = QSharedPointer<NormalDistribution>::create(mean, deviation);
-	DistributionTestDisplay * distributionTestDisplay = new DistributionTestDisplay(this);
-	distributionTestDisplay->start(distribution, amount, increment);
+	//DistributionTestDisplay * distributionTestDisplay = new DistributionTestDisplay(this);
+	//distributionTestDisplay->start(distribution, amount, increment);
 }
 
 void BoardDisplay::uniformDistribtutionTest()
@@ -199,8 +200,8 @@ void BoardDisplay::uniformDistribtutionTest()
 	double increment = 0.1;
 	int amount = 1000;
 	QSharedPointer<StatisticalDistribution> distribution = QSharedPointer<UniformDistribution>::create(lowerBound, upperBound);
-	DistributionTestDisplay * distributionTestDisplay = new DistributionTestDisplay(this);
-	distributionTestDisplay->start(distribution, amount, increment);
+	//DistributionTestDisplay * distributionTestDisplay = new DistributionTestDisplay(this);
+	//distributionTestDisplay->start(distribution, amount, increment);
 }
 
 void BoardDisplay::keyPressEvent(QKeyEvent *event)
@@ -238,7 +239,7 @@ QMenu * BoardDisplay::createPlayerMenu(std::shared_ptr<Player> player, std::stri
 	QMenu* playerMenu = new QMenu(QString::fromStdString(menuName));
 	QAction* humanPlayerAction = playerMenu->addAction("Human");
 	QAction* heuristicPlayerAction = playerMenu->addAction("Computer: Heuristic");
-	QAction* neuralNetworkPlayerAction = playerMenu->addAction("Computer: Nerual Network");
+	QAction* neuralNetworkPlayerAction = playerMenu->addAction("Computer: Neural Network");
 	if (player == _blackPlayer)
 	{
 		connect(humanPlayerAction, SIGNAL(triggered()), this, SLOT(setBlackHumanPlayer()));
@@ -276,14 +277,16 @@ void  BoardDisplay::setBlackHeuristicPlayer()
 
 void BoardDisplay::setRedNeuralNetworkPlayer()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("Nerual Network Files"), ".txt");
-	auto nerualNetwork = NeuralNetworkFileHandler::ReadNetworkFromQFile(filename);
-	_redPlayer = std::make_shared<NeuralNetworkPlayer>(nerualNetwork, Board::RED);
+	//QString filename = QFileDialog::getOpenFileName(this, tr("Neural Network Files"), ".txt");
+	QString filename = "C:\\Users\\deskj\\Documents\\Visual Studio 2017\\Projects\\Checkers\\Checkers\\src\\Resources\\winner.txt";//QFileDialog::getOpenFileName(this, tr("Neural Network Files"), QDir::homePath(), tr("Text Files (*.txt)"));
+	auto neuralNetwork = NeuralNetworkFileHandler::ReadNetworkFromQFile(filename);
+	_redPlayer = std::make_shared<NeuralNetworkPlayer>(neuralNetwork, "net", Board::RED);
 }
 
 void BoardDisplay::setBlackNeuralNetworkPlayer()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("Nerual Network Files"), ".txt");
-	auto nerualNetwork = NeuralNetworkFileHandler::ReadNetworkFromQFile(filename);
-	_blackPlayer = std::make_shared<NeuralNetworkPlayer>(nerualNetwork, Board::BLACK);
+	//QString filename = QFileDialog::getOpenFileName(this, tr("Neural Network Files"), ".txt");
+	QString filename = "C:\\Users\\deskj\\Documents\\Visual Studio 2017\\Projects\\Checkers\\Checkers\\src\\Resources\\winner1.txt";//QFileDialog::getOpenFileName(this, tr("Neural Network Files"), QDir::homePath(), tr("Text Files (*.txt)"));
+	auto neuralNetwork = NeuralNetworkFileHandler::ReadNetworkFromQFile(filename);
+	_blackPlayer = std::make_shared<NeuralNetworkPlayer>(neuralNetwork,"net", Board::BLACK);
 }

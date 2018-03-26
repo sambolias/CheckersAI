@@ -1,7 +1,7 @@
 #include "NeuralNetworkPlayer.h"
+#include "NeuralNetworkFileHandler.h"
 using std::shared_ptr;
 using std::string;
-#include <QDebug>
 
 NeuralNetworkPlayer::NeuralNetworkPlayer(shared_ptr<NeuralNetwork> network, string name, char color): ComputerPlayer(color)
 {
@@ -10,9 +10,19 @@ NeuralNetworkPlayer::NeuralNetworkPlayer(shared_ptr<NeuralNetwork> network, stri
 	Reset();
 }
 
+shared_ptr<NeuralNetworkPlayer> NeuralNetworkPlayer::clone()
+{
+	return std::make_shared<NeuralNetworkPlayer>(_neuralNetwork, _name, _color);
+}
+
+void NeuralNetworkPlayer::saveNetwork()
+{
+	NeuralNetworkFileHandler n;
+	n.WriteNetworkToFile("winner.txt", _neuralNetwork);
+}
+
 double NeuralNetworkPlayer::getHeuristic(Board& board)
 {
-	//qDebug() << "using virtual function\n";
 	bool isRedPlayer = (_color == Board::RED);
 	return _neuralNetwork->GetBoardEvaluation(isRedPlayer, board.GetBoard());
 }

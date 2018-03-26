@@ -1,3 +1,5 @@
+//SIMD NeuralNetwork based on previous work
+//see NeuralNetwork2.cpp/hpp
 
 #include <vector>
 using std::vector;
@@ -52,11 +54,14 @@ NeuralNetwork::NeuralNetwork(const std::vector<int> & layers)
   resetNeurons();
   randomizeWeights();
  //initial sigma always .05
+  //sigma = 0.05;
   _weightDeviations = vector<float>(getWeightCount(), 0.05);
 }
 
 NeuralNetwork::NeuralNetwork(const std::vector<int> & layers, float kingValue, vector<float> & weights, const vector<float> weightDeviations)
 {
+  // cout<<weights.size()<<" ";
+  // cout<<weightDeviations.size()<<"\n";
 
   //set variables
   _layers = layers;
@@ -82,6 +87,121 @@ NeuralNetwork::NeuralNetwork(const std::vector<int> & layers, float kingValue, v
   }
 
 }
+
+// //augFlag mutates loaded board
+// NeuralNetwork::NeuralNetwork(std::string fname, bool augFlag)
+// {
+//   vector<float> raw = parseFile(fname);
+//   if(!raw.empty())
+//   {
+//     //set other variables
+//     vector<int> layers(raw[0]);
+//     int idx = 1;
+//     for(idx; idx < 1+raw[0]; idx++)
+//     {
+//       layers[idx-1] = raw[idx];
+//     }
+//     _layers = layers;
+//     kingValue = raw[idx];
+//     sigma = raw[++idx];
+//     _pieceCountWeight = raw[++idx];
+//
+//     resetNeurons();
+//
+//     //mutate as offspring of save file
+//     if(augFlag)
+//     {
+//       //random number generators
+//       UniformDistribution U(-0.1, 0.1);
+//       NormalDistribution N(0, 1);
+//       //mutation constants
+//       int n = raw.size() - idx + 1; //n is weight count
+//       float tau = 1. / sqrt(2 * sqrt((float)n));
+//       //mutate values
+//       float kPrime = kingValue + U.GetDistributionNumber();
+//       if(kPrime <= 3.0 && kPrime >= 1.0)
+//         kingValue = kPrime;
+//       //TODO limits on weights or sigma??
+//       sigma = sigma * exp(tau * N.GetDistributionNumber());  //check if it is pow(tau,rand)
+//       _pieceCountWeight = _pieceCountWeight + sigma * N.GetDistributionNumber();
+//
+//       //mutate weights
+//       for(int i = idx; i < raw.size(); i++)
+//         raw[i] = raw[i] + sigma * N.GetDistributionNumber();
+//     }
+//     //set weights
+//     float * f = &raw[++idx];
+//     int i = 0;
+//     _weights = vector<vector<__m256>>(_layers.size());
+//     for (int layer = 0; layer < _layers.size() - 1; layer++)
+//     {
+//       _weights[layer] = vector<__m256>((_layers[layer] * _layers[layer + 1])/8);
+//
+//       for (int weightIndex = 0; weightIndex < _weights[layer].size(); ++weightIndex)
+//       {
+//         _weights[layer][weightIndex] = _mm256_load_ps(&f[i]);
+//         i+=8; //grabbing 8 raw weights at a time
+//       }
+//     }
+//   }
+//   else
+//   {
+//     //TODO make some bad flag for network
+//   }
+// }
+// bool NeuralNetwork::saveNetwork(std::string fname)
+// {
+//   //write to file #of layers / Layers / kingValue / sigma / _pieceCountWeight / weights
+//   ofstream ofs(fname);
+//   try
+//   {
+//     ofs<<_layers.size()<<" ";
+//     for(auto l : _layers)
+//       ofs<<l<<" ";
+//     ofs<<kingValue<<" ";
+//     ofs<<sigma<<" ";
+//     ofs<<_pieceCountWeight<<" ";
+//     for(int layer = 0; layer < _layers.size()-1; layer++)
+//       for(int idx = 0; idx < _weights[layer].size(); idx++)
+//       {
+//         float f[8];
+//         _mm256_store_ps(&f[0], _weights[layer][idx]);
+//         for(int i = 0; i < 8; i++)
+//           ofs<<f[i]<<" ";
+//       }
+//   }
+//   catch(exception & e)
+//   {
+//     cout<<e.what();
+//     ofs.close();
+//     return false;
+//   }
+//   ofs.close();
+//   return true;
+// }
+// vector<float> NeuralNetwork::parseFile(std::string fname)
+// {
+//   //parse directly into vector - same format as saveNetwork
+//   vector<float> values;
+//   ifstream ifs(fname);
+//   try
+//   {
+//     while(!ifs.eof())
+//     {
+//       float temp;
+//       ifs >> temp;
+//       values.push_back(temp);
+//     }
+//   }
+//   catch(exception & e)
+//   {
+//     cout<<e.what();
+//     ifs.close();
+//     return vector<float>(); //return empty vector if throws
+//   }
+//   ifs.close();
+//   return values;
+// }
 
 int NeuralNetwork::getNeuronCount()
 {
@@ -125,6 +245,9 @@ const vector<float>  NeuralNetwork::GetWeights()
     }
   }
   weights.push_back(_pieceCountWeight);
+  //TODO remove test code
+  if(weights.size() != getWeightCount())
+    cout<<"problem with GetWeights\n";
 
   return weights;
 }
@@ -161,7 +284,7 @@ shared_ptr<NeuralNetwork> NeuralNetwork::EvolveNetwork()
   for(int i = 0; i < weightsPrime.size(); i++)
   {
     NormalDistribution N(0, 1);
-    //TODO limits on weights and deviations??
+    //TODO limits on weights or deviations??
     float wLim = 1.0; //this maybe best only for piececountweight - has been preferring piececount
     float w =  weightsPrime[i] + weightDeviationsPrime[i] * N.GetDistributionNumber();
     if(abs(w) <= wLim)

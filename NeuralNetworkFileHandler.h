@@ -1,5 +1,5 @@
 #pragma once
-#include "NoSIMDNeuralNetwork/NeuralNetwork.hpp"
+#include "NeuralNetwork.hpp"
 #include <QString>
 #include <QFile>
 #include <vector>
