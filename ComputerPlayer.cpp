@@ -8,7 +8,7 @@ using std::cout;
 #include <limits>
 using std::numeric_limits;
 
-ComputerPlayer::ComputerPlayer(char color): Player(color)
+ComputerPlayer::ComputerPlayer(char color) : Player(color)
 {
 	_infinity = std::numeric_limits<double>::infinity();
 }
@@ -67,16 +67,7 @@ double ComputerPlayer::minimax(double currentValue, Board & board, double alpha,
 	for (shared_ptr<Movement> move : moves)
 	{
 		Board newBoard = board; // create new board because move->ExecuteMovement(board) modifies board
-		double val = 0.;
-		//not full pruning - reduces depth to check for bad moves
-		if((maximize && alpha < currentValue) || (!maximize && beta > currentValue))
-		{
-			val = minimax(currentValue, move->ExecuteMovement(newBoard).UpdateKings(), alpha, beta, !maximize, depth/2);
-		}
-		else 
-		{
-			val = minimax(currentValue, move->ExecuteMovement(newBoard).UpdateKings(), alpha, beta, !maximize, depth - 1);
-		}
+		double val = minimax(currentValue, move->ExecuteMovement(newBoard).UpdateKings(), alpha, beta, !maximize, depth - 1);
 		best = (maximize) ? std::max(val, best) : std::min(val, best);
 		if (maximize)
 		{
