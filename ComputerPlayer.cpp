@@ -1,5 +1,5 @@
 #include "ComputerPlayer.h"
-//#include <QDebug>
+#include <QDebug>
 #include <algorithm>
 using std::vector;
 using std::shared_ptr;
@@ -10,6 +10,7 @@ using std::numeric_limits;
 
 ComputerPlayer::ComputerPlayer(char color) : Player(color)
 {
+	qDebug() << "using computer player\n";
 	_infinity = std::numeric_limits<double>::infinity();
 }
 
@@ -17,7 +18,7 @@ Board& ComputerPlayer::TakeTurn(Board& board, vector<shared_ptr<Movement>>& move
 {
 	if (moves.size())
 	{
-		auto move = minimax(board, moves, 6);
+		auto move = minimax(board, moves, 8);
 		move->ToString();
 		board = move->ExecuteMovement(board);
 		return board.UpdateKings();

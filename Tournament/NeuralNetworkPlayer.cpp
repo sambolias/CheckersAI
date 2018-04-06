@@ -5,6 +5,7 @@ using std::string;
 
 NeuralNetworkPlayer::NeuralNetworkPlayer(shared_ptr<NeuralNetwork> network, string name, char color): ComputerPlayer(color)
 {
+	qDebug() << "using neural network\n";
 	_neuralNetwork = network;
 	SetName(name);
 	Reset();
@@ -12,7 +13,7 @@ NeuralNetworkPlayer::NeuralNetworkPlayer(shared_ptr<NeuralNetwork> network, stri
 
 double NeuralNetworkPlayer::getHeuristic(Board& board)
 {
-	//qDebug() << "using virtual function\n";
+	
 	bool isRedPlayer = (_color == Board::RED);
 	return _neuralNetwork->GetBoardEvaluation(isRedPlayer, board.GetBoard());
 }

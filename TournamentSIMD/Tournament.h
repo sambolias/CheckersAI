@@ -21,6 +21,7 @@ private:
     int _gameNumber;
     int _generationNumber;
     std::vector<std::shared_ptr<NeuralNetworkPlayer>> _players;
+    std::vector<int> _layers;
     void startGeneration();
     void playGame(std::shared_ptr<NeuralNetworkPlayer> redPlayer, std::shared_ptr<NeuralNetworkPlayer> blackPlayer);
     void evolveWinners();

@@ -24,6 +24,7 @@ public:
 	bool IsOver();
 	int GetTurn();
 	Player & GetCurrentPlayer();
+	Board & GetBoardAsBoard();
 };
 
 #endif

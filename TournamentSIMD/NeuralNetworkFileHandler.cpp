@@ -66,10 +66,14 @@ using std::exception;
 void NeuralNetworkFileHandler::WriteNetworkToFile(string filename, shared_ptr<NeuralNetwork> neuralNetwork)
 {
 	string networkAsString = NeuralNetworkToString(neuralNetwork);
+
 	ofstream file(filename);
+	
 	if (file.is_open())
 	{
+		try{
 		file << networkAsString;
+		}catch(...){ cout<<"file output error!"; throw "File output error"; }
 		file.close();
 	}
 }

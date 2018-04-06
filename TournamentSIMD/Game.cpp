@@ -38,6 +38,11 @@ vector<char> & Game::GetBoard()
 	return _board.GetBoard();
 }
 
+Board & Game::GetBoardAsBoard()
+{
+	return _board;
+}
+
 vector<vector<char>> Game::GetBoardAsMatrix()
 {
 	return _board.GetBoardAsMatrix();
