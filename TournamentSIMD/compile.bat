@@ -1,0 +1,1 @@
+cl *.cpp /Ox /EHsc /arch:AVX /openmp /Fe.\EvolveNetwork.exe
