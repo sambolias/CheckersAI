@@ -18,14 +18,14 @@ Board& ComputerPlayer::TakeTurn(Board& board, vector<shared_ptr<Movement>>& move
 {
 	if (moves.size())
 	{
-		auto move = minimax(board, moves, 8);
+		auto move = minimax(board, moves, 10);
 		move->ToString();
 		board = move->ExecuteMovement(board);
 		return board.UpdateKings();
 	}
 	else
 	{
-		//qDebug() << "There are no moves for " + _color;
+		qDebug() << "There are no moves for " + _color;
 		return board;
 	}
 }

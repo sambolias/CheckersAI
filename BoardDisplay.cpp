@@ -278,15 +278,15 @@ void  BoardDisplay::setBlackHeuristicPlayer()
 void BoardDisplay::setRedNeuralNetworkPlayer()
 {
 	//QString filename = QFileDialog::getOpenFileName(this, tr("Neural Network Files"), ".txt");
-	QString filename = "C:\\Users\\deskj\\Documents\\Visual Studio 2017\\Projects\\Checkers\\Checkers\\src\\Resources\\5layer5depth10gen.txt";//QFileDialog::getOpenFileName(this, tr("Neural Network Files"), QDir::homePath(), tr("Text Files (*.txt)"));
+	QString filename = "C:\\Users\\deskj\\Documents\\Visual Studio 2017\\Projects\\Checkers\\Checkers\\src\\Resources\\newwinner1.txt";//QFileDialog::getOpenFileName(this, tr("Neural Network Files"), QDir::homePath(), tr("Text Files (*.txt)"));
 	auto neuralNetwork = NeuralNetworkFileHandler::ReadNetworkFromQFile(filename);
-	_redPlayer = std::make_shared<NeuralNetworkPlayer>(neuralNetwork, "net", Board::RED);
+	_redPlayer = std::make_shared<NeuralNetworkPlayer>(neuralNetwork, "rednet", Board::RED);
 }
 
 void BoardDisplay::setBlackNeuralNetworkPlayer()
 {
 	//QString filename = QFileDialog::getOpenFileName(this, tr("Neural Network Files"), ".txt");
-	QString filename = "C:\\Users\\deskj\\Documents\\Visual Studio 2017\\Projects\\Checkers\\Checkers\\src\\Resources\\5layer3depth.txt";//QFileDialog::getOpenFileName(this, tr("Neural Network Files"), QDir::homePath(), tr("Text Files (*.txt)"));
+	QString filename = "C:\\Users\\deskj\\Documents\\Visual Studio 2017\\Projects\\Checkers\\Checkers\\src\\Resources\\newwinner1.txt";//QFileDialog::getOpenFileName(this, tr("Neural Network Files"), QDir::homePath(), tr("Text Files (*.txt)"));
 	auto neuralNetwork = NeuralNetworkFileHandler::ReadNetworkFromQFile(filename);
-	_blackPlayer = std::make_shared<NeuralNetworkPlayer>(neuralNetwork,"net", Board::BLACK);
+	_blackPlayer = std::make_shared<NeuralNetworkPlayer>(neuralNetwork,"blacknet", Board::BLACK);
 }

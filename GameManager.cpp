@@ -26,6 +26,8 @@ void GameManager::startNewGame(std::shared_ptr<Player> redPlayer, std::shared_pt
 	display->resetBoards();
 	display->displayPieces(game.GetBoard());
 	playing = true;
+	int moves = 0;
+	const int maxmoves = 100;
 
 	while (playing)
 	{
@@ -48,15 +50,21 @@ void GameManager::startNewGame(std::shared_ptr<Player> redPlayer, std::shared_pt
 				moved = false;
 			}
 		}
+		moves++;
 		game.TakeNextTurn();
 		display->addBoard(game.GetBoard());
 		display->displayPieces(game.GetBoard());
-		if (game.IsOver())
+		if (game.IsOver() || moves == maxmoves)
 			break;
 	}
 
-	std::string winner = ((game.GetTurn() == game.RED_TURN) ? "BLACK" : "RED");
-	BoardDisplay::displayText(winner + " is the winner!");
+	if (moves != maxmoves) {
+		std::string winner = ((game.GetTurn() == game.RED_TURN) ? "BLACK" : "RED");
+		BoardDisplay::displayText(winner + " is the winner!");
+	}
+	else {
+		BoardDisplay::displayText("DRAW!!");
+	}
 }
 
 

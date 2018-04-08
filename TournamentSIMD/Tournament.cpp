@@ -24,6 +24,7 @@ using std::sort;
 #define GEN_NUM 500
 #include <omp.h>
 #include <chrono>
+#include <regex>
 
 // C:\Users\Frank's Laptop\Desktop\Programming\School\CS405-Intro-to-AI\CheckersAI
 void Tournament::Start(int populationSize, int maxMoves,  double winWeight, double lossWeight, double drawWeight, const vector<int> & layers)
@@ -48,22 +49,24 @@ void Tournament::Start(int populationSize, int maxMoves,  double winWeight, doub
 
     startGeneration();
 }
-//std::chrono::nanoseconds total_ellapsed (0);
+std::chrono::nanoseconds total_ellapsed (0);
 // Plays a round in the tournament
 void Tournament::startGeneration()
 {
-    //start timing games only
-    //std::chrono::high_resolution_clock clock;
-   // std::chrono::nanoseconds ellapsed (0);
-  //  auto start = clock.now();
-  //no longer recursive in hopes that was causing crash - doesn't seem to be case...
+    //start timing
+    std::chrono::high_resolution_clock clock;
+    std::chrono::nanoseconds ellapsed (0);
+    auto start = clock.now();
+
+  cout<<"resetting\n";
  for(_generationNumber = 0; _generationNumber < GEN_NUM; _generationNumber++) {
     // set games played to zero for all players
     for (auto player : _players)
     {
         player->Reset();
     }
-    
+    cout<<"networks reset\n";
+
     UniformDistribution playerChooser(0, _players.size());
     int blackPlayerIndex;
 
@@ -79,7 +82,7 @@ void Tournament::startGeneration()
     {
         shared_ptr<NeuralNetworkPlayer> redPlayer;
         shared_ptr<NeuralNetworkPlayer> blackPlayer;
-        
+
         redPlayer = _players[redPlayerIndex];
         for (int i = 0; i < 5; ++i)
         {
@@ -92,7 +95,7 @@ void Tournament::startGeneration()
                 }
             }
             while (blackPlayerIndex == redPlayerIndex || blackPlayerIndex >= _players.size());
-            
+
             redPlayer = _players[redPlayerIndex]->clone();
             blackPlayer = _players[blackPlayerIndex]->clone();
 
@@ -108,7 +111,7 @@ void Tournament::startGeneration()
     {
         shared_ptr<NeuralNetworkPlayer> redPlayer;
         shared_ptr<NeuralNetworkPlayer> blackPlayer;
-        
+
         blackPlayer = _players[blackPlayerIndex];
         for (int i = 0; i < 5; ++i)
         {
@@ -121,7 +124,7 @@ void Tournament::startGeneration()
                 }
             }
             while (redPlayerIndex == blackPlayerIndex || redPlayerIndex >= _players.size());
-            
+
             redPlayer = _players[redPlayerIndex]->clone();
             blackPlayer = _players[blackPlayerIndex]->clone();
 
@@ -135,14 +138,14 @@ void Tournament::startGeneration()
     cout<<"running "<<players.size()/2<<" games for generation "<<_generationNumber<<"\n";
 
 
-  
+
     //play games in parallel
-    #pragma omp parallel for schedule(dynamic) 
+    #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < players.size()-1; i+=2)
     {
         playGame(players[i], players[i+1]);
     }
-
+cout<<"finished running games\n";
     //kindof silly, but this would need a reduction and would slow down pragma omp
     _gameNumber = players.size()/2;
     //resync members to their scores/games played
@@ -152,34 +155,35 @@ void Tournament::startGeneration()
         _players[playersMap[i]]->IncrementGamesPlayed();
     }
 
-    //auto curr_ellapsed = std::chrono::duration_cast<std::chrono::nanoseconds> (clock.now() - start);
+    auto curr_ellapsed = std::chrono::duration_cast<std::chrono::nanoseconds> (clock.now() - start);
+    total_ellapsed += std::chrono::duration_cast<std::chrono::nanoseconds> (clock.now() - start);
     // Print scores from generation
-    cout << endl << "Generation " << _generationNumber/* <<" took "<<curr_ellapsed.count()/1e09/60.*/ << " Scores:"<<endl;
+    cout << endl << "Generation " << _generationNumber <<" took "<<curr_ellapsed.count()/1e09/60. << " minutes\n Scores:"<<endl;
     cout << "Name / Score / Games Played" << endl;
     for (auto player : _players)
     {
         cout << player->GetName() << " / " << player->GetScore() << " / " << player->GetGamesPlayed() << endl;
     }
-
+cout<<"evolving\n";
     evolveWinners();
- 
+
 
     //intermidiately output winning network will overwrite on successful generations
     _players[0]->saveNetwork();
 }
     //_tournamentFileHandler.WriteGenerationToFiles(_generationNumber++, _players);
     // if (_generationNumber < 10/*GEN_NUM*/)
-    // {   
+    // {
     //     //end timing
     //   //  total_ellapsed += std::chrono::duration_cast<std::chrono::nanoseconds> (clock.now() - start);
-        
+
     //     _generationNumber++;
     //     startGeneration();
     // }
 
 
-  //  cout<<"10 generations on average take "<<total_ellapsed.count()/1e09/10./60.<<" minutes each.\n";
-    
+    cout<<GEN_NUM <<" generations on average take "<<total_ellapsed.count()/1e09/GEN_NUM/60.<<" minutes each.\n";
+
     //save top network
     sortPlayersByScore();
     _players[0]->saveNetwork();
@@ -192,7 +196,7 @@ void Tournament::startGeneration()
 //     _players = vector<shared_ptr<NeuralNetworkPlayer>>(_players.begin(), _players.end() - _players.size() / 2);
 //     int newPlayersSize = _players.size();
 //     for (int playerIndex = 0; playerIndex < newPlayersSize; ++playerIndex)
-//     {        
+//     {
 //         string parentName = "NN_" + to_string(playerIndex);
 //         string childName = "NN_" + to_string(_players.size());
 
@@ -216,32 +220,66 @@ void Tournament::startGeneration()
 // TODO if new networks doesn't work well try 3 offspring each
 void Tournament::evolveWinners()
 {
+  cout<<"sorting\n";
     sortPlayersByScore();
+      cout<<"sorted\n";
     //take top 25%
     _players = vector<shared_ptr<NeuralNetworkPlayer>>(_players.begin(), _players.end() - _players.size() * 3 / 4);
+cout<<"parents stored\n";
     //50% for offspring
     int newPlayersSize = _players.size() * 2;
-    //make offspring and give parents back their names
-    for (int playerIndex = 0; playerIndex < newPlayersSize; playerIndex+=2)
-    {        
-        string parentName = "NN_" + to_string(playerIndex);
-        string childName1 = "NN_" + to_string(_players.size());
-        string childName2 = "NN_" + to_string(_players.size()+1);
+    cout<<newPlayersSize<<"\n";
+    //available numbers for new players so parents keep theirs
+    vector<int> nums(_populationSize);
+    for(int n = 0; n<nums.size(); n++)
+      nums[n] = n;
+
+    for(auto & p : _players)
+    {
+      if(p.use_count() == 0)
+        cout<<"your player is empty\n";
+        string name;
+
+          name = p->GetName();
+  cout<<name<<" ";
+      std::regex e("NN_([0-9]+)");
+      if(!std::regex_match(name, e))
+        cout<<"bad name: "<<name<<"\n";
+      int num = std::stoi(name.substr(3, name.size()));
+      int elt = num;
+      //for a vector that keeps getting shorter
+      while(elt >= nums.size() || nums[elt] > num) elt--;
+      if(elt < 0)
+       cout << "heres the problem "<<name<<"\n";
+      nums.erase(nums.begin()+elt, nums.begin()+elt+1);
+    }
+cout<<"\nparents saved\n";
+    auto iter = nums.begin();
+
+    //make offspring
+    for (int playerIndex = 0; playerIndex < newPlayersSize/2; playerIndex++)
+    {
+        string childName1 = "NN_" + to_string(*iter);
+        ++iter;
+        string childName2 = "NN_" + to_string(*iter);
+        ++iter;
 
         auto parentPlayer = _players[playerIndex];
         auto childNetwork1 = parentPlayer->GetNeuralNetork()->EvolveNetwork();
         auto childPlayer1 = make_shared<NeuralNetworkPlayer>(childNetwork1, childName1, Board::RED);
         auto childNetwork2 = parentPlayer->GetNeuralNetork()->EvolveNetwork();
         auto childPlayer2 = make_shared<NeuralNetworkPlayer>(childNetwork2, childName2, Board::RED);
-        parentPlayer->SetName(parentName);
+        //parentPlayer->SetName(parentName);
 
         _players.push_back(childPlayer1);
         _players.push_back(childPlayer2);
     }
+    cout<<"offspring saved\n";
     // Populate new players
     for (int i = _players.size(); i < _populationSize; ++i)
     {
-        string playerName = "NN_" + to_string(i);
+        string playerName = "NN_" + to_string(*iter);
+        ++iter;
         auto network = make_shared<NeuralNetwork>(_layers);
         auto player = make_shared<NeuralNetworkPlayer>(network, playerName, Board::RED);
         _players.push_back(player);
@@ -277,9 +315,9 @@ void Tournament::playGame(shared_ptr<NeuralNetworkPlayer> redPlayer, shared_ptr<
     redPlayer->SetColor(Board::RED);
     blackPlayer->SetColor(Board::BLACK);
     Game game(redPlayer, blackPlayer);
-    
+
     //vector<vector<char>> boards;
-    int moves = 0; 
+    int moves = 0;
     while (!game.IsOver() && moves < _maxMoves)
     {
       //  boards.push_back(game.GetBoard());
@@ -291,7 +329,7 @@ void Tournament::playGame(shared_ptr<NeuralNetworkPlayer> redPlayer, shared_ptr<
     string winnerName = "None";
     string redPlayerName = redPlayer->GetName();
     string blackPlayerName = blackPlayer->GetName();
-    
+
     // Draw
     if (moves >= _maxMoves)
     {
